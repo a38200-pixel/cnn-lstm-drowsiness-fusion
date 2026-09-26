@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Raw/local data and generated metadata/splits
+data/raw/
+data/external/
+data/metadata/*
+!data/metadata/.gitkeep
+data/splits/*
+!data/splits/.gitkeep
+
+# Generated features, checkpoints, and experiment tracking
+features/
+feature_cache/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
+mlruns/
+mlartifacts/
+mlflow.db
+
+# Runtime outputs (keep the directory placeholder)
+outputs/*
+!outputs/.gitkeep

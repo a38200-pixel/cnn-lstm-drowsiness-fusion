@@ -1,0 +1,45 @@
+dataset:
+  name: SUST-DDD
+  data_root_env: SUST_DDD_ROOT
+  total_videos: 2074
+  class_counts:
+    drowsy: 975
+    not_drowsy: 1099
+  video_length_seconds: 10
+
+input:
+  image_size: [224, 224]
+  channels: 3
+  frames_per_video: 20
+  frame_sampling: null  # UNKNOWN
+  augmentation: null  # UNKNOWN
+  normalization: null  # UNKNOWN
+
+model:
+  backbones: [vgg19, vgg16]
+  pretrained: null  # UNKNOWN
+  cnn_training_policy: null  # UNKNOWN: freeze/fine-tuning
+  lstm:
+    input_size: 4096
+    hidden_size: 512
+    num_layers: 1
+  classifier:
+    dimensions: [512, 512, 64, 2]
+    activation: null  # UNKNOWN
+    output_activation: softmax
+
+cross_validation:
+  folds: 4
+  train_fraction: 0.75
+  holdout_fraction: 0.25
+  subject_wise: null  # UNKNOWN
+  aggregation: null  # UNKNOWN
+
+training:
+  optimizer: null  # UNKNOWN
+  learning_rate: null  # UNKNOWN
+  batch_size: null  # UNKNOWN
+  epochs: null  # UNKNOWN
+  weight_decay: null  # UNKNOWN
+  loss: null  # UNKNOWN
+  random_seed: null  # UNKNOWN
