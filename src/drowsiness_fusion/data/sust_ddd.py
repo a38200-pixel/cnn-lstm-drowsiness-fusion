@@ -1,4 +1,8 @@
-"""SUST-DDD video discovery, label parsing, and metadata inspection."""
+"""SUST-DDD 경로 검색과 파일명 label 해석을 제공하는 공통 모듈이다.
+
+주요 입력은 외부 raw data root와 영상 파일명이고, 주요 출력은 정렬된 영상 경로와
+``drowsy``/``not_drowsy`` label이다. 데이터 복사, 영상 변환, frame 추출은 하지 않는다.
+"""
 
 from __future__ import annotations
 
@@ -15,7 +19,7 @@ _VIDEO_ID_PATTERN = re.compile(r"^(?P<prefix>[dn])_(?P<identifier>.+)$", re.IGNO
 
 
 def resolve_data_root(value: str | Path | None = None) -> Path:
-    """Resolve an explicit root or the ``SUST_DDD_ROOT`` environment variable."""
+    """명시한 경로 또는 ``SUST_DDD_ROOT``를 검증해 절대 경로로 반환한다."""
 
     raw_value = value if value is not None else os.getenv("SUST_DDD_ROOT")
     if raw_value is None or not str(raw_value).strip():
@@ -27,9 +31,10 @@ def resolve_data_root(value: str | Path | None = None) -> Path:
 
 
 def parse_label(filename_or_id: str | Path) -> str:
-    """Parse the SUST-DDD ``d_``/``n_`` filename convention."""
+    """파일명/ID의 ``d_``/``n_`` prefix를 label로 바꾸며 그 외 값은 거부한다."""
 
-    video_id = Path(filename_or_id).stem
+    # 역슬래시를 먼저 정규화해 현재 OS와 무관하게 Windows 경로를 동일하게 해석한다.
+    video_id = Path(str(filename_or_id).replace("\\", "/")).stem
     match = _VIDEO_ID_PATTERN.fullmatch(video_id)
     if match is None:
         raise ValueError(f"Unsupported SUST-DDD video name: {filename_or_id}")
@@ -37,7 +42,7 @@ def parse_label(filename_or_id: str | Path) -> str:
 
 
 def discover_videos(data_root: str | Path) -> list[Path]:
-    """Recursively discover supported video files in deterministic order."""
+    """data root 아래의 지원 영상 파일을 재귀 검색해 결정적 순서로 반환한다."""
 
     root = resolve_data_root(data_root)
     return sorted(
@@ -52,7 +57,7 @@ def discover_videos(data_root: str | Path) -> list[Path]:
 
 @dataclass(frozen=True)
 class VideoMetadata:
-    """Portable metadata for one raw SUST-DDD video."""
+    """한 raw SUST-DDD 영상의 이식 가능한 container metadata다."""
 
     video_id: str
     relative_path: str
@@ -70,7 +75,7 @@ class VideoMetadata:
 
 
 def probe_video(path: str | Path, data_root: str | Path) -> VideoMetadata:
-    """Read container metadata without decoding or extracting a frame sequence."""
+    """영상을 변환하거나 sequence를 추출하지 않고 container metadata만 읽는다."""
 
     import cv2
 
@@ -107,7 +112,7 @@ def probe_video(path: str | Path, data_root: str | Path) -> VideoMetadata:
 
 
 def iter_metadata(paths: Iterable[Path], data_root: str | Path) -> Iterable[VideoMetadata]:
-    """Yield metadata records; callers decide how and where to serialize them."""
+    """입력 경로 순서대로 metadata를 반환하며 저장 방식은 호출자에게 맡긴다."""
 
     for path in paths:
         yield probe_video(path, data_root)

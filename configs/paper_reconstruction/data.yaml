@@ -1,0 +1,23 @@
+dataset:
+  raw_root: "C:/Users/AISW_203_113/Documents/Datasets/SUST Driver Drowsiness Dataset"
+
+metadata:
+  output: "data/metadata/sust_ddd_metadata.csv"
+
+cross_validation:
+  folds: 4
+  stratified: true
+  seed: 42
+  subject_wise: false
+  output_dir: "data/splits/paper_reconstruction"
+
+sequence:
+  frames_per_video: 20
+  sampling: "uniform"
+  deterministic: true
+  target_size: [224, 224]
+  output: "data/sequences/paper_reconstruction_20frame.csv"
+  summary: "data/sequences/paper_reconstruction_20frame_summary.json"
+
+# reconstruction assumption:
+# 원논문은 영상당 20 frames를 명시하지만 정확한 sampling 방식은 공개하지 않았다.

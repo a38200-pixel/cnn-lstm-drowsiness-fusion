@@ -26,6 +26,8 @@ data/metadata/*
 !data/metadata/.gitkeep
 data/splits/*
 !data/splits/.gitkeep
+data/sequences/*
+!data/sequences/.gitkeep
 
 # Generated features, checkpoints, and experiment tracking
 features/

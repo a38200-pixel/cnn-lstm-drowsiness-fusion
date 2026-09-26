@@ -1,4 +1,4 @@
-"""Dataset discovery and metadata utilities."""
+"""데이터 검색, metadata, paper split과 sequence 준비 기능을 제공한다."""
 
 from .sust_ddd import (
     LABEL_DROWSY,

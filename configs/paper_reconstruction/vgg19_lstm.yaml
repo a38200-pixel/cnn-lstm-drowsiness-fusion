@@ -1,0 +1,54 @@
+# Paper-confirmed architecture와 reconstruction assumption을 함께 담되 주석으로 구분한다.
+data:
+  sequence_metadata: "data/sequences/paper_reconstruction_20frame.csv"
+  split_root: "data/splits/paper_reconstruction"
+  feature_manifest: "data/features/paper_reconstruction/vgg19_manifest.csv"
+
+cnn:
+  backbone: "vgg19"
+  pretrained: true       # reconstruction assumption; paper-unknown
+  feature_dim: 4096      # Fig.1 parameter count로 구조적으로 확정
+  feature_layer: "fc1"   # reconstruction assumption; exact FC 위치는 paper-unknown
+  freeze_backbone: true  # reconstruction assumption; paper-unknown
+  input_size: [224, 224]
+  normalization: "imagenet"  # reconstruction assumption; paper-unknown
+  feature_cache_dir: "data/features/paper_reconstruction/vgg19"
+
+feature_extraction:
+  video_batch_size: 1
+  device: "auto"
+  num_workers: 0
+
+sequence:
+  length: 20
+
+lstm:
+  input_size: 4096
+  hidden_size: 512
+  num_layers: 1
+  batch_first: true
+
+classifier:
+  hidden_1: 512
+  hidden_2: 64
+  num_classes: 2
+  activation_1: "relu"
+  activation_2: "sigmoid"
+
+cross_validation:
+  folds: 4
+  seed: 42
+
+# 아래 최적화 값은 모두 초기 reconstruction assumption이며 논문 확정값이 아니다.
+training:
+  epochs: 30
+  batch_size: 16
+  optimizer: "adam"
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  device: "auto"
+  num_workers: 0
+  seed: 42
+
+output:
+  root: "outputs/paper_reconstruction/vgg19_lstm"
