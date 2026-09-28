@@ -42,31 +42,56 @@ class VGGFrameFeatureExtractor(nn.Module):
         self,
         backbone: str,
         pretrained: bool,
-        feature_layer: str = "fc1",
+        feature_point: str | None = None,
         freeze_backbone: bool = True,
         vgg_model: nn.Module | None = None,
+        feature_layer: str | None = None,
     ) -> None:
         super().__init__()
-        if feature_layer not in {"fc1", "fc2"}:
-            raise ValueError("feature_layer는 fc1 또는 fc2여야 합니다.")
+        if feature_point is not None and feature_layer is not None:
+            raise ValueError("feature_point와 legacy feature_layer를 동시에 지정할 수 없습니다.")
+        selected_point = feature_point or feature_layer or "fc1"
+        if selected_point not in {"fc1", "fc2"}:
+            raise ValueError("feature_point는 fc1 또는 fc2여야 합니다.")
+
         self.backbone_name = backbone
-        self.feature_layer = feature_layer
-        self.vgg = vgg_model or build_torchvision_vgg(backbone, pretrained)
-        self.classifier_end = 2 if feature_layer == "fc1" else 5
+        self.feature_point = selected_point
+        self.feature_layer = selected_point  # 기존 호출부/기록과의 호환성
+
+        vgg = vgg_model or build_torchvision_vgg(backbone, pretrained)
         if freeze_backbone:
-            for parameter in self.vgg.parameters():
+            for parameter in vgg.parameters():
                 parameter.requires_grad = False
+
+        classifier = list(vgg.classifier.children())
+        if len(classifier) < 5:
+            raise ValueError("VGG classifier에 fc1/fc2 extraction에 필요한 layer가 없습니다.")
+        self.features = vgg.features
+        self.avgpool = vgg.avgpool
+        self.fc1 = classifier[0]
+        self.relu1 = classifier[1]
+        self.dropout1 = classifier[2]
+        self.fc2 = classifier[3]
+        self.relu2 = classifier[4]
 
     def forward(self, frames: torch.Tensor) -> torch.Tensor:
         """``[N, 3, H, W]`` frame batch를 선택한 4096D feature로 변환한다."""
 
         if frames.ndim != 4 or frames.shape[1] != 3:
             raise ValueError(f"frame 입력 shape가 올바르지 않습니다: {tuple(frames.shape)}")
-        features = self.vgg.features(frames)
-        features = self.vgg.avgpool(features)
-        features = torch.flatten(features, 1)
-        for layer in list(self.vgg.classifier.children())[: self.classifier_end]:
-            features = layer(features)
-        if features.ndim != 2 or features.shape[1] != 4096:
-            raise ValueError(f"VGG feature는 [N, 4096]이어야 합니다: {tuple(features.shape)}")
-        return features
+        x = self.features(frames)
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+
+        x = self.fc1(x)
+        x = self.relu1(x)
+        if self.feature_point == "fc1":
+            feature = x
+        else:
+            x = self.dropout1(x)
+            x = self.fc2(x)
+            feature = self.relu2(x)
+
+        if feature.ndim != 2 or feature.shape[1] != 4096:
+            raise ValueError(f"VGG feature는 [N, 4096]이어야 합니다: {tuple(feature.shape)}")
+        return feature

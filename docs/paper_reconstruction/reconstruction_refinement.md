@@ -120,9 +120,16 @@ R0는 기존 결과를 그대로 사용하는 reference다. 재학습하거나 �
 | `fc1` current | indices 0–1 | First Linear → ReLU |
 | `fc2` candidate | indices 0–4 | First Linear → ReLU → Dropout → Second Linear → ReLU |
 
-`VGGFrameFeatureExtractor.classifier_end`는 `fc1=2`, `fc2=5`이며 Python slicing의 end-exclusive 규칙을 따른다. Evaluation mode에서는 Dropout이 비활성화된다.
+Extractor는 숫자 slicing 대신 `fc1`, `relu1`, `dropout1`, `fc2`, `relu2`를 명시적으로 실행한다. Evaluation mode에서는 Dropout이 비활성화된다.
 
-R1은 feature extraction point만 `fc1`에서 `fc2`로 변경하고 LSTM 구조와 학습 조건은 R0와 동일하게 유지하는 방향의 후보 계획이다. 실행한다면 backbone별 별도 `fc2` feature cache와 manifest를 만들고 기존 `fc1` cache를 덮어쓰지 않는다.
+R1은 feature extraction point만 `fc1`에서 `fc2`로 변경하고 LSTM 구조와 학습 조건은 R0와 동일하게 유지하도록 구현했다. R1 전용 config는 `configs/paper_reconstruction/vgg19_lstm_fc2.yaml`이다.
+
+- Feature cache: `data/features/paper_reconstruction/refinement/R1/vgg19/fc2/`
+- Manifest: `data/features/paper_reconstruction/refinement/R1/vgg19/fc2_manifest.csv`
+- Output: `outputs/paper_reconstruction/refinement/R1_vgg19_fc2/`
+- MLflow parent run: `R1_vgg19_fc2`
+
+기존 R0 `fc1` cache, output, history, metrics와 checkpoint를 수정하거나 덮어쓰지 않는다.
 
 ### R2 — CNN Training Policy
 
@@ -214,7 +221,7 @@ Condition별로 최소한 다음을 표에 누적한다.
 |---|---|---:|---:|---:|---:|---:|---|
 | R0 | VGG19 | 79.94% | 80.88% | 75.28% | 77.94% | existing summary 참조 | Completed |
 | R0 | VGG16 | 80.04% | 81.90% | 74.15% | 77.72% | existing summary 참조 | Completed |
-| R1 | VGG19 | — | — | — | — | — | Planned |
+| R1 | VGG19 | — | — | — | — | — | Implemented; user execution required |
 | R2 | VGG19 | — | — | — | — | — | Candidate not fixed |
 | R3 | VGG19 | — | — | — | — | — | Candidate not fixed |
 | R4 | VGG19 | — | — | — | — | — | Candidate not fixed |
@@ -266,11 +273,45 @@ paper_condition_type = paper_reported | structurally_inferred | reconstruction_a
 
 Dataset과 대용량 feature cache는 MLflow artifact로 업로드하지 않는다. Feature cache는 기존 cache와 분리된 로컬 경로에서 관리한다.
 
+## R1 사용자 실행 순서
+
+선택한 Python 환경에 project dependency를 설치한 뒤 repo root에서 실행한다.
+
+1. MLflow tracking server를 시작한다.
+
+   ```powershell
+   mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000
+   ```
+
+2. 다른 터미널에서 VGG19 fc2 feature cache와 manifest를 생성한다. 이 단계가 각 `[20, 4096]` array의 shape와 finite value를 저장 전에 검증한다.
+
+   ```powershell
+   python scripts/extract_paper_vgg_features.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml
+   ```
+
+3. Manifest의 video 수와 R1 경로를 확인한다.
+
+   ```powershell
+   python -c "from pathlib import Path; from drowsiness_fusion.data.paper_feature_dataset import read_feature_manifest; p=Path('data/features/paper_reconstruction/refinement/R1/vgg19/fc2_manifest.csv'); rows=read_feature_manifest(p); print('videos=', len(rows)); print('manifest=', p)"
+   ```
+
+4. Fold 1을 먼저 실행하고 local output과 MLflow의 `R1_vgg19_fc2/fold_1` run을 확인한다.
+
+   ```powershell
+   python scripts/train_paper_lstm_fold.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml --fold 1
+   ```
+
+5. Fold 1 확인 후 전체 4-fold를 실행한다. 이 명령은 fold 1도 새 parent run 아래 다시 실행하므로, 최종 CV 실행은 독립적인 공식 run으로 관리한다.
+
+   ```powershell
+   python scripts/train_paper_lstm_cv.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml
+   ```
+
 ## 12. 보존 및 실행 경계
 
 현재 VGG19/VGG16 baseline의 feature cache, history, metrics, `cv_summary.json`, checkpoint를 수정하거나 덮어쓰지 않는다. R0는 현재 baseline reference로 유지한다.
 
-이 문서는 계획 문서다. 현재 단계에서는 새로운 feature cache 생성, fine-tuning, model training, 4-fold 실행, MLflow server 실행, refinement experiment 실행, dataset 전체 scan 또는 full pytest를 수행하지 않는다.
+R1 코드/config/MLflow 연동은 구현되었지만 feature cache와 실험 결과는 아직 생성하지 않았다. 이 작업에서는 새로운 feature cache 생성, fine-tuning, model training, 4-fold 실행, MLflow server 실행, refinement experiment 실행, dataset 전체 scan 또는 full pytest를 수행하지 않았다.
 
 ## 13. 현재 상태
 
@@ -278,6 +319,11 @@ Dataset과 대용량 feature cache는 MLflow artifact로 업로드하지 않는�
 INITIAL PAPER-INFORMED BASELINE: COMPLETED
 RECONSTRUCTION REFINEMENT: PLANNED
 PRIMARY BACKBONE: VGG19
-MLFLOW TRACKING: PLANNED
+R0: COMPLETED
+R1: IMPLEMENTED / USER EXECUTION REQUIRED
+R1 FEATURE CACHE: NOT GENERATED
+R1 4-FOLD TRAINING: NOT RUN
+R1 RESULT: NOT AVAILABLE
+MLFLOW: READY
 PROPOSED CONTEXT MODEL IMPROVEMENT: NOT STARTED
 ```

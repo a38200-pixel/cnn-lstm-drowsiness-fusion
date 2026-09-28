@@ -87,7 +87,9 @@ class PaperLSTMBaseline(nn.Module):
         self.sequence_length = sequence_length
         self.lstm = KerasCompatibleLSTM(input_size, hidden_size)
         self.dense_1 = nn.Linear(hidden_size, hidden_1)
+        self.relu = nn.ReLU()
         self.dense_2 = nn.Linear(hidden_1, hidden_2)
+        self.sigmoid = nn.Sigmoid()
         self.output = nn.Linear(hidden_2, num_classes)
 
     def forward(self, features: torch.Tensor) -> torch.Tensor:
@@ -99,10 +101,13 @@ class PaperLSTMBaseline(nn.Module):
                 f"모델 입력은 [B, {self.sequence_length}, {self.input_size}]이어야 합니다: "
                 f"{tuple(features.shape)}"
             )
-        hidden = self.lstm(features)
-        hidden = torch.relu(self.dense_1(hidden))
-        hidden = torch.sigmoid(self.dense_2(hidden))
-        return self.output(hidden)
+        x = self.lstm(features)
+        x = self.dense_1(x)
+        x = self.relu(x)
+        x = self.dense_2(x)
+        x = self.sigmoid(x)
+        logits = self.output(x)
+        return logits
 
 
 def parameter_counts(model: PaperLSTMBaseline) -> dict[str, int]:

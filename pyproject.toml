@@ -9,11 +9,12 @@ description = "SUST-DDD CNN-LSTM baseline reconstruction and behavior fusion res
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.26",
-  "opencv-python>=4.9",
-  "PyYAML>=6.0",
-  "torch>=2.2",
-  "torchvision>=0.17",
+  "numpy==1.26.4",
+  "opencv-python>=4.9,<5.0",
+  "PyYAML>=6.0,<7.0",
+  "mlflow>=3.0,<4.0",
+  "torch>=2.2,<3.0",
+  "torchvision>=0.17,<1.0",
 ]
 
 [project.optional-dependencies]

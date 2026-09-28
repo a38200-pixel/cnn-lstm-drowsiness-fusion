@@ -1,8 +1,11 @@
-"""Mock VGG로 4096D feature extraction shape와 deterministic 동작을 검증한다.
+"""Mock VGG로 fc1/fc2 4096D extraction 계약을 검증한다.
 
 Torchvision pretrained weight를 다운로드하거나 실제 VGG16/VGG19 inference를 하지 않는다.
 """
 
+from copy import deepcopy
+
+import pytest
 import torch
 from torch import nn
 
@@ -41,3 +44,39 @@ def test_mocked_vgg_feature_output_is_twenty_by_4096() -> None:
     assert first.shape == (20, 4096)
     assert torch.equal(first, second)
     assert all(not parameter.requires_grad for parameter in extractor.parameters())
+
+
+def test_fc1_and_fc2_are_distinct_4096d_representations() -> None:
+    torch.manual_seed(42)
+    vgg = MockVGG()
+    fc1_extractor = VGGFrameFeatureExtractor(
+        backbone="vgg19",
+        pretrained=False,
+        feature_point="fc1",
+        vgg_model=deepcopy(vgg),
+    ).eval()
+    fc2_extractor = VGGFrameFeatureExtractor(
+        backbone="vgg19",
+        pretrained=False,
+        feature_point="fc2",
+        vgg_model=deepcopy(vgg),
+    ).eval()
+    frames = torch.ones(2, 3, 8, 8)
+
+    with torch.no_grad():
+        fc1 = fc1_extractor(frames)
+        fc2 = fc2_extractor(frames)
+
+    assert fc1.shape == (2, 4096)
+    assert fc2.shape == (2, 4096)
+    assert not torch.equal(fc1, fc2)
+
+
+def test_invalid_feature_point_is_rejected() -> None:
+    with pytest.raises(ValueError, match="fc1 또는 fc2"):
+        VGGFrameFeatureExtractor(
+            backbone="vgg19",
+            pretrained=False,
+            feature_point="pool5",
+            vgg_model=MockVGG(),
+        )

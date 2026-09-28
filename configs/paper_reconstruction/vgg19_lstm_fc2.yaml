@@ -1,0 +1,68 @@
+# R1 reconstruction refinement: R0에서 VGG19 feature point만 fc2 after ReLU로 변경한다.
+experiment:
+  stage: "reconstruction_refinement"
+  condition_id: "R1"
+  result_role: "official"
+
+data:
+  sequence_metadata: "data/sequences/paper_reconstruction_20frame.csv"
+  split_root: "data/splits/paper_reconstruction"
+  feature_manifest: "data/features/paper_reconstruction/refinement/R1/vgg19/fc2_manifest.csv"
+
+cnn:
+  backbone: "vgg19"
+  pretrained: true
+  feature_dim: 4096
+  feature_point: "fc2"
+  freeze_backbone: true
+  input_size: [224, 224]
+  normalization: "imagenet"
+  feature_cache_dir: "data/features/paper_reconstruction/refinement/R1/vgg19/fc2"
+
+feature_extraction:
+  video_batch_size: 1
+  device: "auto"
+  num_workers: 0
+
+sequence:
+  length: 20
+
+lstm:
+  input_size: 4096
+  hidden_size: 512
+  num_layers: 1
+  batch_first: true
+
+classifier:
+  hidden_1: 512
+  hidden_2: 64
+  num_classes: 2
+  activation_1: "relu"
+  activation_2: "sigmoid"
+
+cross_validation:
+  folds: 4
+  seed: 42
+
+training:
+  epochs: 30
+  batch_size: 16
+  optimizer: "adam"
+  learning_rate: 0.0001
+  weight_decay: 0.00001
+  scheduler: "none"
+  validation: "none"
+  early_stopping: false
+  best_checkpoint: false
+  device: "auto"
+  num_workers: 0
+  seed: 42
+
+mlflow:
+  enabled: true
+  tracking_uri: "http://127.0.0.1:5000"
+  experiment_name: "paper-reconstruction-refinement"
+  parent_run_name: "R1_vgg19_fc2"
+
+output:
+  root: "outputs/paper_reconstruction/refinement/R1_vgg19_fc2"

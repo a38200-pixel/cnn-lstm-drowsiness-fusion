@@ -50,6 +50,9 @@ def main() -> None:
     config = load_config(args.config)
     cnn = config["cnn"]
     extraction = config["feature_extraction"]
+    feature_point = str(cnn.get("feature_point", cnn.get("feature_layer", "fc1")))
+    if feature_point not in {"fc1", "fc2"}:
+        raise ValueError("cnn.feature_point는 fc1 또는 fc2여야 합니다.")
     if int(cnn["feature_dim"]) != 4096:
         raise ValueError("Paper reconstruction feature_dim은 4096이어야 합니다.")
 
@@ -74,7 +77,7 @@ def main() -> None:
     extractor = VGGFrameFeatureExtractor(
         backbone=str(cnn["backbone"]),
         pretrained=bool(cnn["pretrained"]),
-        feature_layer=str(cnn["feature_layer"]),
+        feature_point=feature_point,
         freeze_backbone=bool(cnn["freeze_backbone"]),
     ).to(device)
     extractor.eval()
@@ -107,7 +110,10 @@ def main() -> None:
                         "backbone": cnn["backbone"],
                     }
                 )
-            print(f"feature cache 진행: {len(manifest_rows)}/{len(dataset)} videos")
+            print(
+                f"feature cache 진행: {len(manifest_rows)}/{len(dataset)} videos "
+                f"({cnn['backbone']} {feature_point})"
+            )
 
     write_feature_manifest(manifest_rows, manifest_path)
     print(f"feature manifest 생성: {manifest_path}")
