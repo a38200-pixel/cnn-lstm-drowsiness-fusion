@@ -3,10 +3,15 @@
 ## 상태
 
 - Model pipeline: `IMPLEMENTED`
-- Feature extraction: `USER EXECUTION REQUIRED`
-- VGG19 training: `NOT RUN`
-- VGG16 training: `NOT RUN`
-- 4-fold evaluation: `NOT RUN`
+- VGG19 feature extraction: `COMPLETED`
+- VGG19 4-fold training: `COMPLETED`
+- VGG19 official result: `RECORDED`
+- VGG19 early stopping / best-epoch selection: `NOT USED`
+- VGG16 feature extraction: `COMPLETED`
+- VGG16 4-fold training: `COMPLETED`
+- VGG16 official result: `RECORDED`
+- Paper Reconstruction: `COMPLETED`
+- Post-hoc best-epoch analysis: `DIAGNOSTIC ONLY`
 
 ## Pipeline
 
@@ -20,20 +25,25 @@
 → Dense512 + ReLU
 → Dense64 + Sigmoid
 → Dense2 logits
-→ CrossEntropyLoss / holdout evaluation
+→ CrossEntropyLoss / held-out test fold evaluation
 ```
 
 Frame decode 실패는 임의 frame 대체나 자동 제외 없이 오류로 처리한다. Feature cache는 shape가 정확히 20×4096이고 NaN/Inf가 없어야 한다.
 
-## Paper-confirmed
+## Paper-reported
 
 - 20 frames/video
 - 224×224×3 input
 - VGG19 primary, VGG16 secondary
 - LSTM
-- 4-fold, 75% train / 25% holdout
+- 4-fold, 75% training / 25% test
+- One LSTM layer, two fully connected layers, final Softmax
+- ReLU와 Sigmoid activation 사용
+
+## Structurally inferred
+
 - Fig.1 parameter count로 결정되는 LSTM input 4,096
-- LSTM hidden 512, one layer
+- LSTM hidden 512
 - Dense 512, Dense 64, Dense 2
 
 LSTM parameter 공식은 `4 × ((4096 + 512) × 512 + 512) = 9,439,232`다.
@@ -55,16 +65,18 @@ LSTM parameter 공식은 `4 × ((4096 + 512) × 512 + 512) = 9,439,232`다.
 
 - torchvision ImageNet pretrained VGG 사용
 - backbone freeze와 offline feature cache
-- 첫 번째 FC 뒤 ReLU(`fc1`)의 4096D representation 사용
+- 첫 번째 Linear 뒤 ReLU(`fc1`)의 4096D representation 사용
 - OpenCV BGR→RGB, bilinear 224×224 resize, ImageNet normalization
 - augmentation 없음
 - Fig.1 count를 맞추기 위한 Keras-compatible single-bias LSTM
+- Input/recurrent weight와 single bias를 모두 uniform `±1/√512`로 초기화
+- Initial hidden/cell state는 0; Keras default initialization과 동일하다고 가정하지 않음
 - batch-first `[B, 20, 4096]`, 마지막 hidden state 사용
 - Dense512→ReLU→Dense64→Sigmoid→Dense2 logits
-- Softmax는 probability가 필요한 inference에서만 사용
+- Dense2 raw logits를 CrossEntropyLoss에 전달하고 Softmax는 probability inference에서만 사용
 - Dropout, BatchNorm, scheduler, early stopping 없음
 - Adam, epochs 30, batch size 16, learning rate 0.0001, weight decay 0.00001
-- seed 42, holdout fold evaluation, drowsy positive class
+- seed 42, held-out test fold evaluation, drowsy positive class
 - CV mean과 population std(`ddof=0`)
 
 ## Feature cache
@@ -80,22 +92,28 @@ data/features/paper_reconstruction/vgg16_manifest.csv
 
 Manifest 컬럼은 `video_id`, `label`, `feature_path`, `sequence_length`, `feature_dim`, `backbone`이다.
 
-## 사용자 실행
+## Evaluation policy
 
-VGG19:
+- Stratified 4-fold reconstruction
+- Fold마다 fixed 30 epochs
+- Early stopping과 scheduler 없음
+- Best checkpoint selection 없음
+- Epoch 30 final metric을 공식 fold metric으로 사용
+- 4개 final metric의 mean과 population std(`ddof=0`) 사용
+- Holdout history의 best epoch는 training behavior 진단에만 사용
 
-```powershell
-.\.venv\Scripts\python.exe scripts\extract_paper_vgg_features.py --config configs\paper_reconstruction\vgg19_lstm.yaml
-.\.venv\Scripts\python.exe scripts\train_paper_lstm_fold.py --config configs\paper_reconstruction\vgg19_lstm.yaml --fold 1
-.\.venv\Scripts\python.exe scripts\train_paper_lstm_cv.py --config configs\paper_reconstruction\vgg19_lstm.yaml
-```
+현재 reconstruction에서는 held-out test fold를 매 epoch 기록했다. 이 history에서 best epoch를 사후 선택하면 test fold가 validation 역할까지 하게 되므로, 공식 결과는 사전 정의한 final-epoch 정책을 유지한다. 원논문의 validation 및 epoch/checkpoint selection 정책은 공개되지 않았다.
 
-VGG16은 config 파일을 `vgg16_lstm.yaml`로 변경한다. Pretrained weight가 로컬 torchvision cache에 없으면 최초 사용자 실행에서 다운로드가 필요할 수 있다.
+## 결과 보존
+
+VGG19와 VGG16 feature cache, history, metrics, checkpoint 및 `cv_summary.json`은 완료된 공식 baseline 산출물로 보존한다. 결과 정리를 위해 재추출·재학습하거나 기존 파일을 덮어쓰지 않는다.
 
 ## 생성 결과
 
-Feature extraction은 `.npy` cache와 manifest를 만든다. 단일 fold training은 `history.json`, `metrics.json`, `final_model.pt`를 만들며 CV 실행은 추가로 `cv_summary.json`을 만든다. 현재 이 작업들은 실행되지 않았고 성능 결과도 없다.
+Feature extraction은 `.npy` cache와 manifest를 만들었다. 단일 fold training은 `history.json`, `metrics.json`, `final_model.pt`를 만들었으며 CV 실행은 `cv_summary.json`을 만들었다. 두 backbone의 공식 결과와 post-hoc 진단은 [results.md](results.md)에 분리해 기록했다.
 
 ## 다음 단계
 
-VGG19 cache 생성 후 manifest validation을 확인하고 fold 1 smoke training을 수행한다. 메모리와 실행 시간을 확인한 뒤 VGG19 4-fold, VGG16 cache 및 4-fold 순서로 진행한다.
+Context Model Improvement에서도 Paper Reconstruction과 동일한 4-fold train/test 평가 구조를 유지한다. 각 fold는 약 75% training / 25% held-out test로 구성하고, 별도 validation split, early stopping, best checkpoint selection은 도입하지 않는다.
+
+모델 구조, temporal modeling, regularization, optimizer, learning rate 등의 조건은 실험별로 사전에 고정하며, 학습은 사전에 정의한 fixed epoch 기준으로 수행한다. Held-out test fold는 각 fold의 최종 성능 평가에 사용하고, test 결과를 기준으로 best epoch를 선택하지 않는다.
