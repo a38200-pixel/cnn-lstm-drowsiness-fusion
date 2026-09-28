@@ -10,7 +10,8 @@
 - VGG16 feature extraction: `COMPLETED`
 - VGG16 4-fold training: `COMPLETED`
 - VGG16 official result: `RECORDED`
-- Paper Reconstruction: `COMPLETED`
+- Initial paper-informed reconstruction baseline: `COMPLETED`
+- Reconstruction refinement: `PLANNED / NEXT`
 - Post-hoc best-epoch analysis: `DIAGNOSTIC ONLY`
 
 ## Pipeline
@@ -114,6 +115,4 @@ Feature extraction은 `.npy` cache와 manifest를 만들었다. 단일 fold trai
 
 ## 다음 단계
 
-Context Model Improvement에서도 Paper Reconstruction과 동일한 4-fold train/test 평가 구조를 유지한다. 각 fold는 약 75% training / 25% held-out test로 구성하고, 별도 validation split, early stopping, best checkpoint selection은 도입하지 않는다.
-
-모델 구조, temporal modeling, regularization, optimizer, learning rate 등의 조건은 실험별로 사전에 고정하며, 학습은 사전에 정의한 fixed epoch 기준으로 수행한다. Held-out test fold는 각 fold의 최종 성능 평가에 사용하고, test 결과를 기준으로 best epoch를 선택하지 않는다.
+Proposed Context Model Improvement 전에 [reconstruction_refinement.md](reconstruction_refinement.md)의 계획에 따라 feature extraction 위치와 기타 미공개 조건의 민감도를 검토한다. 핵심 4096D→LSTM512 구조와 동일한 4-fold/fixed-epoch 평가 정책은 유지한다.

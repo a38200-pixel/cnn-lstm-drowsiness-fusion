@@ -191,13 +191,14 @@ Initialization은 코드의 실제 동작에 따라 input weight, recurrent weig
 - VGG19/VGG16 4-fold training: `COMPLETED`
 - Official final-epoch results: `RECORDED` ([results.md](results.md))
 - Post-hoc best-epoch analysis: `DIAGNOSTIC ONLY`
-- Paper Reconstruction: `COMPLETED`
+- Initial paper-informed reconstruction baseline: `COMPLETED`
+- Reconstruction refinement: `PLANNED / NEXT`
 - Validation: `NOT USED`
 - Early stopping: `NOT USED`
 - Best checkpoint selection: `NOT USED`
 - Official result: `FIXED EPOCH / FINAL EPOCH`
-- Context Model Improvement: `NOT STARTED`
+- Proposed Context Model Improvement: `NOT STARTED`
 
-Context Model Improvement에서도 Paper Reconstruction과 동일한 4-fold 75% training / 25% held-out test 프로토콜을 유지한다. 별도 validation split, early stopping, best checkpoint selection은 도입하지 않으며, 사전에 정의한 fixed epoch의 final result를 공식 결과로 사용한다. Held-out test 결과를 기준으로 best epoch를 선택하지 않는다.
+현재 완료된 범위는 initial baseline 구현과 VGG19/VGG16 4-fold 실행이다. 다음 단계에서는 [reconstruction_refinement.md](reconstruction_refinement.md)에 따라 미공개 조건의 sensitivity를 검토한다. Refinement에서도 동일한 4-fold 75% training / 25% held-out test 프로토콜을 유지하고 별도 validation, early stopping, best checkpoint selection 또는 test 기반 best-epoch selection을 사용하지 않는다.
 
 기존 저장소의 32-frame sequence, 512D GAP feature, LSTM128, 기존 split과 기존 성능은 이 baseline에 사용하지 않았다.

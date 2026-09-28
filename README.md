@@ -1,21 +1,23 @@
 # CNN-LSTM Drowsiness Fusion
 
-SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구현하고, 이후 Context Model Improvement, 행동 규칙, fusion detection으로 확장하는 프로젝트입니다.
+SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구현하고, reconstruction refinement를 거쳐 Context Model Improvement, 행동 규칙, fusion detection으로 확장하는 프로젝트입니다.
 
 ## 현재 상태
 
 - `DATA PREPARATION: COMPLETED`
 - `VGG19 / VGG16 FEATURE EXTRACTION: COMPLETED`
 - `VGG19 / VGG16 4-FOLD TRAINING: COMPLETED`
-- `PAPER RECONSTRUCTION: COMPLETED`
-- `OFFICIAL VGG19 F1: 77.94%`
-- `OFFICIAL VGG16 F1: 77.72%`
+- `INITIAL PAPER-INFORMED BASELINE: COMPLETED`
+- `VGG19 BASELINE F1: 77.94%`
+- `VGG16 BASELINE F1: 77.72%`
 - `BEST-EPOCH ANALYSIS: POST-HOC DIAGNOSTIC ONLY`
 - `VALIDATION: NOT USED`
 - `EARLY STOPPING: NOT USED`
 - `BEST CHECKPOINT SELECTION: NOT USED`
 - `OFFICIAL RESULT: FIXED EPOCH / FINAL EPOCH`
-- `NEXT: CONTEXT MODEL IMPROVEMENT WITH THE SAME 4-FOLD TRAIN/TEST PROTOCOL`
+- `RECONSTRUCTION REFINEMENT: PLANNED`
+- `MLFLOW TRACKING: PLANNED FOR NEW REFINEMENT EXPERIMENTS`
+- `PROPOSED CONTEXT MODEL IMPROVEMENT: DEFERRED UNTIL RECONSTRUCTION REFINEMENT`
 
 ## Paper Reconstruction Baseline
 
@@ -177,11 +179,10 @@ Held-out test fold를 기준으로 epoch를 선택하면 test가 validation 역�
 - [data_preparation.md](docs/paper_reconstruction/data_preparation.md): metadata, split, sampling 정책
 - [model_pipeline.md](docs/paper_reconstruction/model_pipeline.md): frame→VGG→LSTM pipeline
 - [results.md](docs/paper_reconstruction/results.md): official 결과와 diagnostic 분석
+- [reconstruction_refinement.md](docs/paper_reconstruction/reconstruction_refinement.md): 미공개 조건의 sensitivity analysis와 R0–R5 실험 계획
 
 ## 다음 단계
 
-Paper Reconstruction 단계에서 사용한 4-fold train/test 평가 구조를 유지한 상태에서 Context Model Improvement를 진행합니다.
+Proposed Context Model Improvement에 앞서 Paper Reconstruction Refinement를 진행합니다. 원논문 핵심 구조와 기존 4-fold 75/25 train/test, fixed-epoch 평가 정책을 유지하면서 feature extraction 위치, CNN training policy, optimizer/learning rate, training duration과 preprocessing/sampling의 민감도를 제한적으로 검토합니다.
 
-각 fold는 약 75% training / 25% held-out test 구조를 유지하며, 별도의 validation split, early stopping, best checkpoint selection은 도입하지 않습니다. 개선 단계에서는 모델 구조, temporal modeling, regularization, optimizer, learning rate 등의 조건을 실험하되, 각 실험은 사전에 정의한 fixed epoch 기준으로 수행합니다.
-
-Held-out test fold는 각 fold의 최종 성능 평가 용도로 사용하며, test 결과를 기준으로 best epoch를 선택하지 않습니다. 이후 EAR/MAR/Head Pose behavior detection과 fusion detection으로 확장합니다.
+상세 계획은 [reconstruction_refinement.md](docs/paper_reconstruction/reconstruction_refinement.md)에 있습니다.

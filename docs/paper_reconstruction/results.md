@@ -162,12 +162,8 @@ Best-epoch values were obtained retrospectively from the per-epoch held-out test
 
 ## 10. Conclusion
 
-VGG19와 VGG16 Paper Reconstruction의 feature extraction 및 fixed 30-epoch 4-fold training을 완료했다. 공식 final-epoch F1 mean은 VGG19 77.94%, VGG16 77.72%였으며 두 backbone의 평균 성능은 매우 유사했다. Post-hoc best-F1 분석은 과적합과 fold별 최적 시점 변동을 보여주지만 공식 결과로 사용하지 않는다.
+VGG19와 VGG16 initial paper-informed reconstruction baseline의 feature extraction 및 fixed 30-epoch 4-fold training을 완료했다. 공식 final-epoch F1 mean은 VGG19 77.94%, VGG16 77.72%였으며 두 backbone의 평균 성능은 매우 유사했다. Post-hoc best-F1 분석은 과적합과 fold별 최적 시점 변동을 보여주지만 공식 결과로 사용하지 않는다. 원논문과의 성능 차이 때문에 Paper Reconstruction 전체가 완료되었다고 표현하지 않으며, 미공개 조건에 대한 refinement가 남아 있다.
 
 ## 11. Next Step
 
-Paper Reconstruction 단계에서 사용한 4-fold train/test 평가 구조를 유지한 상태에서 Context Model Improvement를 진행한다.
-
-각 fold는 약 75% training / 25% held-out test 구조를 유지하며, 별도의 validation split, early stopping, best checkpoint selection은 도입하지 않는다. 개선 단계에서는 모델 구조, temporal modeling, regularization, optimizer, learning rate 등의 조건을 실험하되, 각 실험은 사전에 정의한 fixed epoch 기준으로 수행한다.
-
-Held-out test fold는 각 fold의 최종 성능 평가 용도로 사용하며, test 결과를 기준으로 best epoch를 선택하지 않는다.
+Proposed Context Model Improvement로 바로 넘어가지 않고 [reconstruction_refinement.md](reconstruction_refinement.md)의 R0–R5 계획에 따라 미공개 reconstruction condition의 sensitivity를 검토한다. 모든 refinement 실험은 기존 4-fold 75% training / 25% held-out test와 fixed-epoch final-result 정책을 유지하며, validation, early stopping, best checkpoint selection 또는 test 기반 best-epoch selection을 사용하지 않는다.
