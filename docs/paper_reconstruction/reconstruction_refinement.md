@@ -122,14 +122,14 @@ R0는 기존 결과를 그대로 사용하는 reference다. 재학습하거나 �
 
 Extractor는 숫자 slicing 대신 `fc1`, `relu1`, `dropout1`, `fc2`, `relu2`를 명시적으로 실행한다. Evaluation mode에서는 Dropout이 비활성화된다.
 
-R1은 feature extraction point만 `fc1`에서 `fc2`로 변경하고 LSTM 구조와 학습 조건은 R0와 동일하게 유지하도록 구현했다. R1 전용 config는 `configs/paper_reconstruction/vgg19_lstm_fc2.yaml`이다.
+R1은 feature extraction point만 `fc1`에서 `fc2`로 변경하고 LSTM 구조와 학습 조건은 R0와 동일하게 유지해 4-fold 실험을 완료했다. R1 전용 config는 `configs/paper_reconstruction/vgg19_lstm_fc2.yaml`이다.
 
 - Feature cache: `data/features/paper_reconstruction/refinement/R1/vgg19/fc2/`
 - Manifest: `data/features/paper_reconstruction/refinement/R1/vgg19/fc2_manifest.csv`
 - Output: `outputs/paper_reconstruction/refinement/R1_vgg19_fc2/`
 - MLflow parent run: `R1_vgg19_fc2`
 
-기존 R0 `fc1` cache, output, history, metrics와 checkpoint를 수정하거나 덮어쓰지 않는다.
+기존 R0 `fc1` cache, output, history, metrics와 checkpoint를 수정하거나 덮어쓰지 않았다.
 
 ### R2 — CNN Training Policy
 
@@ -221,7 +221,7 @@ Condition별로 최소한 다음을 표에 누적한다.
 |---|---|---:|---:|---:|---:|---:|---|
 | R0 | VGG19 | 79.94% | 80.88% | 75.28% | 77.94% | existing summary 참조 | Completed |
 | R0 | VGG16 | 80.04% | 81.90% | 74.15% | 77.72% | existing summary 참조 | Completed |
-| R1 | VGG19 | — | — | — | — | — | Implemented; user execution required |
+| R1 | VGG19 | 79.51% | 81.45% | 73.24% | 76.91% | 3.99%p | Completed |
 | R2 | VGG19 | — | — | — | — | — | Candidate not fixed |
 | R3 | VGG19 | — | — | — | — | — | Candidate not fixed |
 | R4 | VGG19 | — | — | — | — | — | Candidate not fixed |
@@ -232,11 +232,11 @@ Condition별로 최소한 다음을 표에 누적한다.
 새로운 refinement experiment부터 MLflow로 기록한다. 기존 R0 결과를 재학습하거나 기존 MLflow 산출물로 소급 변환하지 않는다.
 
 - Recommended experiment name: `paper-reconstruction-refinement`
-- Condition별 parent run: 예시 `R1_fc2`
+- Condition별 parent run: `R1_vgg19_fc2`
 - Fold별 nested child run: `fold_1` … `fold_4`
 
 ```text
-R1_fc2
+R1_vgg19_fc2
 ├── fold_1
 ├── fold_2
 ├── fold_3
@@ -273,45 +273,90 @@ paper_condition_type = paper_reported | structurally_inferred | reconstruction_a
 
 Dataset과 대용량 feature cache는 MLflow artifact로 업로드하지 않는다. Feature cache는 기존 cache와 분리된 로컬 경로에서 관리한다.
 
-## R1 사용자 실행 순서
+## R0 vs R1 결과 비교
 
-선택한 Python 환경에 project dependency를 설치한 뒤 repo root에서 실행한다.
+R0와 R1의 유일한 reconstruction condition 차이는 VGG19의 4096D feature extraction point다. R0는 `fc1 after ReLU`, R1은 `fc2 after ReLU`를 사용하며, LSTM 구조와 학습·평가 조건은 동일하다.
 
-1. MLflow tracking server를 시작한다.
+### REFINEMENT RESULT — Official Final-Epoch Comparison
 
-   ```powershell
-   mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-destination ./mlartifacts --host 127.0.0.1 --port 5000
-   ```
+Official result는 사전에 고정한 30 epochs의 final epoch metric이다. Test fold의 best epoch를 선택하지 않았다.
 
-2. 다른 터미널에서 VGG19 fc2 feature cache와 manifest를 생성한다. 이 단계가 각 `[20, 4096]` array의 shape와 finite value를 저장 전에 검증한다.
+| Condition | Feature point | Accuracy | Precision | Recall | F1 |
+|---|---|---:|---:|---:|---:|
+| R0 | fc1 after ReLU | 79.94% | 80.88% | 75.28% | 77.94% |
+| R1 | fc2 after ReLU | 79.51% | 81.45% | 73.24% | 76.91% |
+| R1 − R0 | — | -0.43%p | +0.57%p | -2.04%p | -1.03%p |
 
-   ```powershell
-   python scripts/extract_paper_vgg_features.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml
-   ```
+R1 fold별 final-epoch 결과는 다음과 같다.
 
-3. Manifest의 video 수와 R1 경로를 확인한다.
+| Fold | Final F1 |
+|---:|---:|
+| 1 | 71.07% |
+| 2 | 76.47% |
+| 3 | 77.87% |
+| 4 | 82.23% |
 
-   ```powershell
-   python -c "from pathlib import Path; from drowsiness_fusion.data.paper_feature_dataset import read_feature_manifest; p=Path('data/features/paper_reconstruction/refinement/R1/vgg19/fc2_manifest.csv'); rows=read_feature_manifest(p); print('videos=', len(rows)); print('manifest=', p)"
-   ```
+R1 official F1의 population std는 `3.99%p`, Recall의 population std는 `7.05%p`다.
 
-4. Fold 1을 먼저 실행하고 local output과 MLflow의 `R1_vgg19_fc2/fold_1` run을 확인한다.
+### POST-HOC DIAGNOSTIC — Best-Epoch Comparison
 
-   ```powershell
-   python scripts/train_paper_lstm_fold.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml --fold 1
-   ```
+> **POST-HOC DIAGNOSTIC ONLY — official result가 아니며 model/checkpoint selection에 사용하지 않는다.**
 
-5. Fold 1 확인 후 전체 4-fold를 실행한다. 이 명령은 fold 1도 새 parent run 아래 다시 실행하므로, 최종 CV 실행은 독립적인 공식 run으로 관리한다.
+아래 값은 각 held-out test fold에서 test F1이 가장 높았던 epoch를 실험 종료 후 선택해 평균한 진단값이다.
 
-   ```powershell
-   python scripts/train_paper_lstm_cv.py --config configs/paper_reconstruction/vgg19_lstm_fc2.yaml
-   ```
+| Condition | Accuracy | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|
+| R0 fc1 | 81.97% | 81.19% | 80.31% | 80.70% |
+| R1 fc2 | 80.86% | 78.49% | 82.56% | 80.28% |
+| R1 − R0 | -1.11%p | -2.70%p | +2.25%p | -0.42%p |
+
+R1 fold별 post-hoc best epoch는 다음과 같다.
+
+| Fold | Best epoch | Accuracy | Precision | Recall | F1 |
+|---:|---:|---:|---:|---:|---:|
+| 1 | 20 | 77.84% | 72.63% | 84.84% | 78.26% |
+| 2 | 9 | 82.27% | 83.63% | 77.46% | 80.43% |
+| 3 | 18 | 79.19% | 74.29% | 85.25% | 79.39% |
+| 4 | 11 | 84.14% | 83.40% | 82.72% | 83.06% |
+
+R1 post-hoc best F1 mean은 `80.28%`, population std는 약 `1.78%p`다. Best epoch가 `9 / 11 / 18 / 20`으로 달라 하나의 공통 optimal epoch가 관찰되었다고 볼 수 없다.
+
+### Final vs Best Gap
+
+Aggregate gap의 양수 값은 post-hoc best F1이 official final F1보다 높다는 뜻이다.
+
+| Condition | Official final F1 | Post-hoc best F1 | Best − Final |
+|---|---:|---:|---:|
+| R0 fc1 | 77.94% | 80.70% | +2.76%p |
+| R1 fc2 | 76.91% | 80.28% | +3.37%p |
+
+R1 fold별로는 final 시점의 감소 폭을 `Final − Best`로 표시한다.
+
+| Fold | Best F1 | Final F1 | Final − Best |
+|---:|---:|---:|---:|
+| 1 | 78.26% | 71.07% | -7.19%p |
+| 2 | 80.43% | 76.47% | -3.96%p |
+| 3 | 79.39% | 77.87% | -1.52%p |
+| 4 | 83.06% | 82.23% | -0.82%p |
+
+### 해석과 R1 결론
+
+1. Official final 기준에서 R1 fc2는 R0 fc1보다 F1이 `1.03%p` 낮았다. 현재 기준에서는 fc2가 더 나은 reconstruction condition이라고 볼 근거가 없다.
+2. Post-hoc best 기준 F1 차이는 `-0.42%p`로 작다. Feature extraction point만으로 원논문과 현재 reconstruction 사이의 큰 성능 차이를 설명하기 어렵다.
+3. Post-hoc 진단에서 R1은 R0보다 Precision이 `2.70%p` 낮고 Recall이 `2.25%p` 높았다. 이 실험 범위에서는 fc2 representation이 상대적으로 recall-heavy한 prediction behavior를 보였지만 일반화하지 않는다.
+4. R0와 R1 모두 final epoch보다 중간 epoch의 test F1이 높았다. Fixed 30-epoch duration이 현재 reconstruction의 과적합 또는 후반 성능 저하와 관련될 가능성이 있으나, test best epoch는 official 결과 선택에 사용할 수 없다.
+
+R1의 fc2 feature extraction은 동일한 fixed training protocol에서 R0 fc1보다 official F1이 낮았으며, post-hoc best-epoch 기준에서도 두 조건의 차이는 매우 작았다. 따라서 feature extraction point는 원논문과의 성능 차이를 설명하는 주요 요인으로 보기 어렵다.
+
+현재 reconstruction reference는 R0 fc1을 유지한다. 이는 원논문이 fc1을 사용했다거나 fc1이 통계적으로 우월하다는 의미가 아니다.
+
+다음 refinement stage는 R2 CNN training policy다. ImageNet pretrained frozen VGG19와 fine-tuning policy의 plausibility를 검토하되, 이 문서에서는 R2 조건을 확정하거나 구현하지 않는다. R0/R1의 final-vs-best gap 때문에 training duration도 중요한 후속 refinement 항목으로 남기지만 R4를 R2보다 먼저 실행한다고 확정하지 않는다.
 
 ## 12. 보존 및 실행 경계
 
 현재 VGG19/VGG16 baseline의 feature cache, history, metrics, `cv_summary.json`, checkpoint를 수정하거나 덮어쓰지 않는다. R0는 현재 baseline reference로 유지한다.
 
-R1 코드/config/MLflow 연동은 구현되었지만 feature cache와 실험 결과는 아직 생성하지 않았다. 이 작업에서는 새로운 feature cache 생성, fine-tuning, model training, 4-fold 실행, MLflow server 실행, refinement experiment 실행, dataset 전체 scan 또는 full pytest를 수행하지 않았다.
+R1 feature cache와 4-fold training은 완료되었으며 결과는 위 비교에 기록했다. 기존 R0/R1 cache, output, history, metrics, checkpoint와 MLflow logs는 결과 문서화를 위해 읽기만 하고 수정하지 않는다.
 
 ## 13. 현재 상태
 
@@ -320,10 +365,14 @@ INITIAL PAPER-INFORMED BASELINE: COMPLETED
 RECONSTRUCTION REFINEMENT: PLANNED
 PRIMARY BACKBONE: VGG19
 R0: COMPLETED
-R1: IMPLEMENTED / USER EXECUTION REQUIRED
-R1 FEATURE CACHE: NOT GENERATED
-R1 4-FOLD TRAINING: NOT RUN
-R1 RESULT: NOT AVAILABLE
+R1: COMPLETED
+R1 FEATURE CACHE: COMPLETED
+R1 4-FOLD TRAINING: COMPLETED
+R1 OFFICIAL F1: 76.91%
+R1 POST-HOC BEST F1: 80.28%
+R1 INTERPRETATION: fc2 did not improve reconstruction performance
+REFERENCE FEATURE POINT: fc1
 MLFLOW: READY
+NEXT: R2 CNN TRAINING POLICY
 PROPOSED CONTEXT MODEL IMPROVEMENT: NOT STARTED
 ```
