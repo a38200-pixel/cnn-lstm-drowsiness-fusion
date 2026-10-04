@@ -1,0 +1,68 @@
+# R2 refinement condition: VGG19 block5만 fine-tune하고 fc1/LSTM 구조는 유지한다.
+experiment:
+  stage: "reconstruction_refinement"
+  condition_id: "R2"
+  result_role: "official"
+
+data:
+  sequence_metadata: "data/sequences/paper_reconstruction_20frame.csv"
+  split_root: "data/splits/paper_reconstruction"
+
+cnn:
+  backbone: "vgg19"
+  pretrained: true
+  feature_point: "fc1"
+  feature_dim: 4096
+  cnn_training_policy: "last_block_finetune"
+  frozen_blocks: [1, 2, 3, 4]
+  trainable_blocks: [5]
+  fc1_trainable: false
+  input_size: [224, 224]
+  normalization: "imagenet"
+
+sequence:
+  length: 20
+
+lstm:
+  input_size: 4096
+  hidden_size: 512
+  num_layers: 1
+  batch_first: true
+
+classifier:
+  hidden_1: 512
+  hidden_2: 64
+  num_classes: 2
+  activation_1: "relu"
+  activation_2: "sigmoid"
+
+cross_validation:
+  folds: 4
+  seed: 42
+
+training:
+  epochs: 30
+  batch_size: 16
+  optimizer: "adam"
+  cnn_learning_rate: 0.00001
+  temporal_learning_rate: 0.0001
+  weight_decay: 0.00001
+  scheduler: "none"
+  validation: "none"
+  early_stopping: false
+  checkpoint_selection: "final_epoch"
+  device: "cuda"
+  num_workers: 8
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 2
+  seed: 42
+
+mlflow:
+  enabled: true
+  tracking_uri: "http://127.0.0.1:5000"
+  experiment_name: "paper-reconstruction-refinement"
+  parent_run_name: "R2_vgg19_lastblock_finetune"
+
+output:
+  root: "outputs/paper_reconstruction/refinement/R2_vgg19_lastblock_finetune"
