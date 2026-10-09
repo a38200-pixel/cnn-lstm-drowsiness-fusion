@@ -123,7 +123,15 @@ def main() -> None:
     parser.add_argument("--fold", type=int, choices=(1, 2, 3, 4))
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--resume-from", type=Path)
+    parser.add_argument("--num-workers", type=int)
+    parser.add_argument("--pin-memory", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--persistent-workers", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--prefetch-factor", type=int)
     args = parser.parse_args()
+    if args.num_workers is not None and args.num_workers < 0:
+        parser.error("--num-workers must be nonnegative")
+    if args.prefetch_factor is not None and args.prefetch_factor < 1:
+        parser.error("--prefetch-factor must be positive")
     if args.resume_from is not None and args.fold is None:
         parser.error("--resume-from requires --fold")
     device = require_cuda()
@@ -135,6 +143,11 @@ def main() -> None:
     # 1. Config, seed, device
     config = load_config(args.config)
     training = config["training"]
+    for key in ("num_workers", "pin_memory", "persistent_workers", "prefetch_factor"):
+        value = getattr(args, key)
+        if value is not None:
+            training[key] = value
+    loader_settings(training)  # Validate before creating a run or output.
     seed = int(training["seed"])
     seed_everything(seed)
     print(json.dumps(environment(config, args.fold, device), ensure_ascii=False), flush=True)

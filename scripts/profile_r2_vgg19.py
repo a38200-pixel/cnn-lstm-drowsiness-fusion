@@ -28,20 +28,26 @@ def main():
     parser.add_argument("--batches", type=int, default=20)
     parser.add_argument("--test-batches", type=int, default=2)
     parser.add_argument("--num-workers", type=int)
+    parser.add_argument("--pin-memory", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--persistent-workers", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--prefetch-factor", type=int)
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     if not 1 <= args.batches <= 30 or not 0 <= args.test_batches <= 5:
         parser.error("train batches must be 1..30; test batches 0..5")
     if args.num_workers is not None and args.num_workers not in (0, 2, 4, 8):
         parser.error("worker diagnostic candidates: 0, 2, 4, 8")
+    if args.prefetch_factor is not None and args.prefetch_factor < 1:
+        parser.error("--prefetch-factor must be positive")
     if args.output.exists():
         raise FileExistsError("Choose a new profile output file.")
     device = require_cuda()
     config = load_config(args.config)
-    if args.num_workers is not None:
-        config["training"]["num_workers"] = args.num_workers
-        config["training"]["persistent_workers"] = args.num_workers > 0
-        config["training"]["prefetch_factor"] = 2 if args.num_workers else None
+    for key in ("num_workers", "pin_memory", "persistent_workers", "prefetch_factor"):
+        value = getattr(args, key)
+        if value is not None:
+            config["training"][key] = value
+    loader_settings(config["training"])
     seed_everything(int(config["training"]["seed"]))
     env = environment(config, args.fold, device)
     print(json.dumps(env, ensure_ascii=False), flush=True)
