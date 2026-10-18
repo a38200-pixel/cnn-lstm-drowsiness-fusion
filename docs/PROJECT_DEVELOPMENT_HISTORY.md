@@ -1,6 +1,6 @@
 # SUST-DDD Drowsiness Detection Project Development History
 
-[확실] **Last updated / R2 snapshot: 2026-10-09 17:02:21 KST (UTC+09:00).** 실행 상태는 이 시각의 기록이며 이후 진행 상황을 자동 반영하지 않는다. Fold1은 epoch30 official final 결과를 기록한다.
+[확실] **Last updated / R2 snapshot: 2026-10-18 15:04:38 KST (UTC+09:00).** R2 training/official aggregate/해석은 COMPLETED, official F1은80.24% ± 2.22%p다. 날짜별 과거 snapshot은 보존하며 최신 결과는10.2절과 status matrix를 따른다.
 
 [확실] 이 문서는 프로젝트의 누적 연구·개발·실험·문제 해결 기록이다. 프로젝트는 **exact paper reproduction이 아니라 paper-informed reconstruction**이며, 실험하지 않은 결과를 만들지 않는다. **Official final result와 diagnostic result를 구분**하고, 확인되지 않은 정보는 미확인/미검증 또는 `NOT AVAILABLE`로 표시한다.
 
@@ -23,7 +23,7 @@ SUST-DDD 분석
 → Final Comparison (세부 ablation 설계는 NOT AVAILABLE)
 ```
 
-[확실] Stage 1 baseline과 R1은 완료했다. R2 Fold1도 epoch30을 완료했지만 전체 4-fold 결과가 없어 Stage 2 refinement는 `IN PROGRESS`다. Stage 3 Context 및 Behavior/Fusion의 실행 로직은 `NOT STARTED`다.
+[확실] Stage 1 baseline, R1, R2 training/aggregate/해석은 완료했다. Stage2는 R3~R5 Gate의 후속 결정이 남아 `IN PROGRESS`다. Stage3 Context 및 Behavior/Fusion의 실행 로직은 `NOT STARTED`다. NEXT는 R4 duration sensitivity design이며 epoch 값은 미정이다.
 
 # 2. Research Question and Scope
 
@@ -401,7 +401,7 @@ input_size = 4,096
 
 ## 9.11 Current Stable Execution Setting
 
-[확실] **Workers4/prefetch1은 FOLD1 FULL-RUN VALIDATED다.** Smoke/profile 이후 official Fold1의 30 epoch를 완주했다. 다른 fold의 완주나 globally optimal setting을 보장하지 않는다. Effective setting은 다음과 같다.
+[확실] **Workers4/prefetch1은 R2 4-FOLD FULL-RUN VALIDATED다.** 네 fold의 epoch30 final을 확보했으며 Fold3/4의 중단 후 resume을 포함한다. 무중단 완주나 globally optimal setting을 보장하지 않는다. Effective setting은 다음과 같다.
 
 ```yaml
 num_workers: 4
@@ -449,6 +449,106 @@ prefetch_factor: 1
 
 [확실] 요청의 Fold2~4 NOT RUN 전제와 달리, 이번 조회에는 `R2_cuda_fold2_workers4_prefetch1_official/fold_2/experiment_environment.json`과 2026-10-09 16:58:37 KST 시작한 local MLflow Fold2 RUNNING 기록이 있다. 아직 epoch metric은 없으며 이 작업에서 Fold2를 실행하거나 변경하지 않았다. 이번 작성에서 프로세스 생존을 직접 조회하지 않았으므로 RUNNING은 MLflow에 기록된 상태다.
 
+## 10.1 R2 Fold2 Completed (2026-10-11)
+
+[확실] **Snapshot: 2026-10-11 18:00:52 KST.** Fold2 output은 `outputs/paper_reconstruction/refinement/R2_cuda_fold2_workers4_prefetch1_official/fold_2/`다. History의 epoch1~30, metrics.json, MLflow final metric을 사용자 제공값과 교차 확인했다. Fold2 parent/child는 2026-10-11 06:16:17 KST에 FINISHED로 종료했고 last_checkpoint.pt(683,546,669 bytes), final_model.pt, training_metadata.json이 존재한다. Checkpoint 내부는 역직렬화하지 않아 미검증이다.
+
+### Official Fold2 epoch30 final
+
+| Metric | Exact value | Display |
+|---|---:|---:|
+| Train loss | 0.012601864343011974 | 0.0126 |
+| Test loss | 0.7646111181734384 | 0.7646 |
+| Accuracy | 0.8111753371868978 | 81.12% |
+| Precision | 0.8016528925619835 | 80.17% |
+| Recall | 0.7950819672131147 | 79.51% |
+| F1 | 0.7983539094650205 | **79.84%** |
+
+[확실] Confusion matrix는 `[[227,48],[50,194]]`이며 drowsy positive, TN227/FP48/FN50/TP194다. Fold2 final의 FP/FN 수는 비슷하지만 이 오류 분포를 다른 fold나 전체 성능으로 일반화하지 않는다.
+
+| Epoch30 timing | Seconds |
+|---|---:|
+| epoch_train_seconds | 3234.7271157000214 |
+| epoch_test_seconds | 1117.4555496000685 |
+| avg_train_batch_seconds | 33.0074195479594 |
+| checkpoint_save_seconds | 1.028082299977541 |
+| epoch_total_seconds | 4353.210771699902 (**약72.55분**) |
+
+[확실] Timing 정의는 기존과 같아 epoch total은 checkpoint 저장까지 포함하고 이후 JSON/MLflow 쓰기는 제외한다.
+
+### Completed official folds — 2 / 4
+
+| Fold | Accuracy (%) | Precision (%) | Recall (%) | F1 (%) |
+|---:|---:|---:|---:|---:|
+| 1 | 78.23 | 76.73 | 77.05 | 76.89 |
+| 2 | 81.12 | 80.17 | 79.51 | 79.84 |
+
+[확실] **R2 official overall/4-fold aggregate는 NOT AVAILABLE**이다. 두 fold의 interim 평균은 작성하지 않았다. Single-fold 또는 부분 결과만으로 R0/R1 대비 전체 우위를 결론내리지 않고 네 fold의 epoch30 mean/population std로 판단한다.
+
+### Diagnostic and loss interpretation
+
+[확실] **POST-HOC DIAGNOSTIC ONLY:** Fold2 best test F1은 epoch25의 0.8104838709677419 (**81.05%**)다. Best epoch는 official selection에 사용하지 않으며 epoch30 final과 분리한다.
+
+[추측] Train loss0.0126/test loss0.7646 차이는 Fold1과 함께 possible late-stage overfitting의 후속 분석 대상이다. 확정으로 단정하지 않고 Fold1/2 전체 history와 Fold3/4 결과까지 함께 검토한다.
+
+### Execution validation and remaining work
+
+[확실] Fold2 환경 JSON도 workers4/pin_memory=true/persistent_workers=true/prefetch_factor=1, batch16, AMP=false, seed42를 기록한다. **Workers4/prefetch1: two full folds completed successfully.** 전체4-fold 안정성이나 optimal setting을 보장하지 않는다. 연구 조건은 변경하지 않았다.
+
+[확실] 요청의 Fold3 NOT RUN 전제와 달리 2026-10-11 18:00:39 KST 시작한 Fold3 local MLflow child/parent가 RUNNING이며 별도 `R2_cuda_fold3_workers4_prefetch1_official/fold_3/experiment_environment.json`이 존재한다. 조회 시 환경 JSON만 있고 epoch metric은 없었다. RUNNING은 MLflow 기록이며 이번 작업에서는 프로세스 생존을 직접 조회하지 않았다. 학습을 실행하거나 기존 프로세스를 변경하지 않았다.
+
+[확실] **NEXT:** 이미 시작된 Fold3 official completion → Fold4 → 4-fold aggregation → R0/R1/R2 comparison → R2 interpretation and R3~R5 refinement gate. Fold4는 NOT RUN이다. Stage1/R0/R1은 COMPLETED, Stage2는 IN PROGRESS, Stage3 Context는 NOT STARTED, Behavior/Fusion은 PLANNED / NOT STARTED다. 실패·중단 이력과 기존 Fold1 결과는 보존했다.
+
+
+## 10.2 R2 Fold3/Fold4 Resume Completion and Official Aggregate (2026-10-18)
+
+[확실] **Snapshot: 2026-10-18 15:04:38 KST.** 위 Fold1/2 항목은 각각의 날짜 snapshot이다. 현재는 Fold1~4 training, aggregate와 해석 모두 COMPLETED이며 아래 결과가 최신이다.
+
+[확실] Fold3는 최초15 epoch 완료 후 중단, 첫 resume에서16 epoch 저장 후 사용자 요청 중단, 다음 resume에서17~30 epoch를 마쳤다. 최종 output은 `R2_cuda_fold3_resume_next/fold_3/`이며 final model 저장은2026-10-13 13:08:37 KST, MLflow는 FINISHED다.
+
+[확실] Fold4는 최초21 epoch까지 저장 후 중단되었고2026-10-15에 epoch22부터 resume해30 epoch를 마쳤다. 최종 output은 `R2_cuda_fold4_resumed_20261015/fold_4/`이며 final model 저장 시각은2026-10-15 22:17:26 KST다. 두 경로는 `outputs/paper_reconstruction/refinement/` 기준이다. Resume 이전 부분 history를 별도 fold로 중복 집계하지 않았다.
+
+[확실] **OFFICIAL: epoch30 final, mean ± population std (ddof=0).** 원래 float precision으로 계산하고 표시만 반올림했다. History는 각 fold에 epoch1~30이 연속이며 metrics.json의 final 값과 일치한다. 아래 표는 best epoch를 사용하지 않는다.
+
+| Fold | Accuracy (%) | Precision (%) | Recall (%) | F1 (%) |
+|---|---:|---:|---:|---:|
+| 1 | 78.23 | 76.73 | 77.05 | 76.89 |
+| 2 | 81.12 | 80.17 | 79.51 | 79.84 |
+| 3 | 83.04 | 84.21 | 78.69 | 81.36 |
+| 4 | 83.95 | 83.06 | 82.72 | 82.89 |
+| **Mean** | **81.58** | **81.04** | **79.49** | **80.24** |
+| **Population std (%p)** | **2.19** | **2.89** | **2.06** | **2.22** |
+
+[확실] Official 조건 비교와 delta는 다음과 같다. %p delta도 반올림 전 mean끼리 계산했다.
+
+| Condition | Accuracy (%) | Precision (%) | Recall (%) | F1 (%) |
+|---|---:|---:|---:|---:|
+| R0 VGG19 frozen FC1 | 79.94 | 80.88 | 75.28 | 77.94 |
+| R1 VGG19 frozen FC2 | 79.51 | 81.45 | 73.24 | 76.91 |
+| R2 Block5 fine-tuning | 81.58 | 81.04 | 79.49 | 80.24 |
+| **R2−R0 (%p)** | **+1.64** | **+0.17** | **+4.21** | **+2.30** |
+| **R2−R1 (%p)** | **+2.07** | **−0.41** | **+6.25** | **+3.33** |
+
+[확실] R2는 R0 대비 official mean F1을 2.30%p 개선했다. 가장 큰 변화는 Recall +4.21%p이며 Precision +0.17%p는 작다. 이번 official 비교에서 R1 feature point 변경보다 R2 representation adaptation의 결과가 좋았다. 통계적 유의성, 원논문 policy 복원 또는 paper performance gap 해결을 입증한 것은 아니다.
+
+[확실] F1/Recall population std는 R0 1.65/1.67%p, R1 3.99/7.05%p, R2 2.22/2.06%p다. R2 F1 range는6.00%p이며 R1보다 F1/Recall 편차가 작지만 R0보다 크다. 평균 개선과 fold variance 개선이 동시에 발생하지는 않았다.
+
+[확실] Final train/test loss는 Fold1 0.012044/0.900131, Fold2 0.012602/0.764611, Fold3 0.123243/0.648642, Fold4 0.025707/0.601602다. 네 fold 모두 초반10보다 마지막10 평균 test loss가 높고 Fold3의 후반 train loss 반등도 있어 단조 감소로 설명하지 않는다.
+
+[확실] **POST-HOC DIAGNOSTIC ONLY:** best epochs는6/25/18/18, F1은78.93/81.05/81.50/84.23%다. Diagnostic mean81.43%, population std1.89%p이며 official과의 차이는 반올림 전 값으로 약+1.18%p다. Best epoch를 official selection에 사용하거나 epoch18을 새 duration으로 바로 정하지 않는다.
+
+[추측] 후반 test loss 증가와 best−final 차이는 possible late-stage overfitting 및 R4 duration sensitivity 검토를 뒷받침하는 패턴이다. 확정 진단은 아니며 특히 Fold3는 후반 train loss도 반등했다.
+
+[확실] Combined confusion matrix는 `[[917,182],[200,775]]`이며 총2,074 videos, drowsy positive다. Pooled matrix metric과 fold mean은 다른 집계이므로 official 주값은 fold mean ± population std다.
+
+[확실] **R2 4-FOLD FULL-RUN VALIDATED**는 workers4/pin=true/persistent=true/prefetch1, batch16/AMP=false에서 resume을 포함해 네 final 결과를 확보했다는 의미다. 무중단 완주나 optimal setting을 뜻하지 않는다. Workers2 hang, workers8 profile 성공 후1455 실패 이력은 유지했다.
+
+[확실] Fold4는 **training result completed; MLflow terminal status stale**다. Final metrics/model/artifacts는 저장됐고 로컬과 일치하지만 종료 시 cp949 emoji output error로 parent/child RUNNING이 남았다. 결과 저장 확인 후 서버를 종료했으며 DB 상태를 임의 수정하지 않았다.
+
+[확실] 의사결정 흐름은 **R0 frozen FC1 → R1 feature point sensitivity(official 개선 없음) → R2 representation adaptation(official F1 +2.30%p) → 후반 degradation 관찰 → R4 training-duration sensitivity 검토**다. R3 OPTIONAL / R4 RECOMMENDED / R5 DEFER로 분석을 마쳤지만 후속 조건 승인·사전 정의는 남아 있다. Epoch 값/config/추가 실험은 만들지 않았다.
+
+
+
 # 11. Experiment Results Summary
 
 [확실] **OFFICIAL final-epoch 4-fold mean.** Paper reference는 저장소의 문헌 기록이며 동일 조건 재현을 의미하지 않는다.
@@ -460,9 +560,9 @@ prefetch_factor: 1
 | R0 VGG19 fc1 | 79.94 | 80.88 | 75.28 | 77.94 | OFFICIAL |
 | R0 VGG16 fc1 | 80.04 | 81.90 | 74.15 | 77.72 | OFFICIAL |
 | R1 VGG19 fc2 | 79.51 | 81.45 | 73.24 | 76.91 | OFFICIAL |
-| R2 4-fold | — | — | — | — | NOT AVAILABLE |
+| R2 4-fold | 81.58 | 81.04 | 79.49 | 80.24 | OFFICIAL / COMPLETED |
 
-[확실] R2 official Fold1은 Accuracy78.23%/Precision76.73%/Recall77.05%/F1 76.89%다. Single-fold이므로 위 4-fold mean 표에 섞지 않는다.
+[확실] R2 std는 Accuracy2.19/Precision2.89/Recall2.06/F1 2.22%p다. R2−R0 F1 +2.30%p, R2−R1 F1 +3.33%p이며 single-fold과 diagnostic을 위 official mean에 섞지 않는다.
 
 [확실] **POST-HOC DIAGNOSTIC ONLY:** best F1 mean은 R0 VGG19 80.70%, R0 VGG16 81.00%, R1 80.28%다. R2 Fold1 best epoch6 F1 78.93%는 별도 single-fold diagnostic이다.
 
@@ -506,7 +606,7 @@ prefetch_factor: 1
 
 [확실] 현재 subject-wise split과 별도 validation은 없다. 매 epoch held-out test 관찰이 있어 best metric을 selection에 사용하지 않는 경계를 유지해야 한다. 2,074-video 결과만으로 실제 운전자 환경의 일반화를 검증했다고 볼 수 없다.
 
-[확실] Windows DataLoader stability issue와 긴 R2 runtime이 관찰되었다. Workers4의 Fold1 full30 epoch 완주는 확인했지만 전체4-fold 안정성은 미검증이다. Error1455 당시 system commit/pagefile 수치와 workers2 hang 원인은 미확인이다.
+[확실] Windows DataLoader stability issue와 긴 R2 runtime이 관찰되었다. Workers4는 resume을 포함해 전체4-fold final을 확보했지만 무중단/반복 안정성은 보장하지 않는다. Error1455 당시 system commit/pagefile 수치와 workers2 hang 원인은 미확인이다.
 
 [확실] Seed helper는 deterministic algorithms를 `warn_only=True`로 설정하며 adaptive pooling backward warning이 문서에 기록되어 있다. Bitwise CUDA determinism은 보장되지 않는다.
 
@@ -516,16 +616,13 @@ prefetch_factor: 1
 
 [확실] 다음 순서는 현재 문서 계획과 구현 상태를 바탕으로 정리한 남은 작업이며 이번 작성에서 실행하지 않았다.
 
-1. [확실] Fold1 epoch30 official 완료 및 FINISHED 확인을 마쳤다.
-2. [확실] NEXT는 이미 MLflow RUNNING인 Fold2의 official completion이고, THEN 같은 연구 조건의 Fold3 → Fold4다. 중복 Fold2를 실행하지 않는다.
-3. [확실] 네 fold의 final metric으로 mean/population std 집계.
-4. [확실] R0/R1/R2 비교 및 representation adaptation 효과 해석.
-5. [확실] R3 optimizer/LR, R4 fixed duration, 필요 시 R5 preprocessing/sampling Gate 검토.
-6. [확실] Stage3 Context 개선 → Behavior 검출 → Fusion → Final Comparison.
+1. [확실] Fold1~4 epoch30 official final 수집과 mean/population std 집계, R0/R1/R2 비교 해석은 COMPLETED다.
+2. [확실] NEXT는 R4 fixed-duration sensitivity design 및 R3~R5 Gate의 후속 결정이다. R4 epoch 값/config를 만들지 않았다.
+3. [확실] R3 OPTIONAL, R4 RECOMMENDED, R5 DEFER다. 이후 Stage3 Context 개선 → Behavior 검출 → Fusion → Final Comparison을 계획한다.
 
-[확실] **R3~R5는 PLANNED / VALUE NOT DECIDED.** R2 결과·비용·해석을 검토해 후속 범위를 결정한다. R2 직후 Context로 건너뛰기로 확정한 것은 아니다.
+[확실] **R3~R5의 실행 값은 VALUE NOT DECIDED다.** 현재 Gate 권고와 실제 실행 조건 확정을 구분한다. R2 직후 Context로 건너뛰기로 확정한 것은 아니다.
 
-[확실] `train_r2_vgg19.py`는 `--fold` 없이 네 fold를 실행할 때 CV summary를 만든다. 각각 별도 실행한 output을 합치는 전용 R2 aggregation CLI는 확인되지 않았다. Fold1을 완료한 뒤 집계 방법을 검토하되 기존 결과를 재학습/덮어쓰지 않는 경계를 유지한다.
+[확실] `train_r2_vgg19.py`는 `--fold` 없이 네 fold를 실행할 때 CV summary를 만든다. 이번 별도 실행 output은 최종 resume 경로를 골라 읽기 전용으로 집계하고 문서에 기록했다. 새 aggregate output 파일 생성이나 기존 결과 재학습/덮어쓰기는 수행하지 않았다.
 
 # 16. Planned Context Improvement
 
@@ -626,6 +723,9 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | R1 summary/history | `outputs/paper_reconstruction/refinement/R1_vgg19_fc2/` |
 | Workers8 failed output | `outputs/paper_reconstruction/refinement/R2_cuda_fold1_workers8_official/` |
 | Current R2 history/environment/checkpoint | `outputs/paper_reconstruction/refinement/R2_cuda_fold1_workers4_prefetch1_official/fold_1/` |
+| R2 Fold2 final | `outputs/paper_reconstruction/refinement/R2_cuda_fold2_workers4_prefetch1_official/fold_2/` |
+| R2 Fold3 resumed final | `outputs/paper_reconstruction/refinement/R2_cuda_fold3_resume_next/fold_3/` |
+| R2 Fold4 resumed final | `outputs/paper_reconstruction/refinement/R2_cuda_fold4_resumed_20261015/fold_4/` |
 | Workers0/8 profiles | `outputs/r2_profile_fold1.json`, `outputs/r2_profile_fold1_workers8.json` |
 | Initial/recheck benchmark | `outputs/r2_dataloader_benchmark_summary_20261002.json`, `outputs/r2_dataloader_benchmark_recheck.json` |
 | Workers4 smoke/profile | `outputs/paper_reconstruction/refinement/R2_workers4_prefetch1_smoke_20261007.json`, `outputs/paper_reconstruction/refinement/R2_workers4_prefetch1_profile5_20261007.json` |
@@ -654,10 +754,18 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | 2026-10-08 10:15:27 KST, snapshot | 당시 Fold1 완료10 epoch, checkpoint/history 존재 | 당시 RUNNING; official final은 NOT AVAILABLE |
 | 2026-10-09 10:23:37 KST, MLflow 종료 | Workers4/prefetch1 Fold1 epoch30 완료 | FINISHED; official Fold1 F1 76.89%; 4-fold 결과는 NOT AVAILABLE |
 | 2026-10-09 16:58:37 KST, MLflow 시작 | Fold2 child RUNNING, 별도 환경 JSON 생성 | 요청의 NOT RUN 전제와 차이; 문서 작업에서 실행하지 않음 |
+| 2026-10-11 06:16:17 KST, MLflow 종료 | Fold2 epoch30 완료 | FINISHED; official F1 79.84%; 2/4 folds completed |
+| 2026-10-11 18:00:39 KST, MLflow 시작 | Fold3 child RUNNING, 별도 환경 JSON | 요청의 NOT RUN 전제와 차이; 문서 작업에서 실행하지 않음 |
+| 2026-10-12, output/실행 기록 | Fold3 epoch15 중단 → resume16 저장 → 사용자 요청 중단 → resume17~30 | Checkpoint 복원으로 완료 epoch 보존 |
+| 2026-10-13 13:08:37 KST, final model/MLflow | Fold3 epoch30 완료 | FINISHED; final F1 81.36% |
+| 2026-10-14 22:19:59 KST, checkpoint | Fold4 epoch21까지 저장 후 중단 | 다음 resume은 epoch22 |
+| 2026-10-15 22:17:26 KST, final model | Fold4 resume22~30 완료 | Final F1 82.89%; 종료 시 cp949 오류로 MLflow 상태 잔존 |
+| 2026-10-16, 집계/저장 검증 | 네 fold final 수집·4-fold 집계·해석; MLflow 저장 확인 후 서버 종료 | R2 official F1 80.24% ± 2.22%p; R4 권고 |
+| 2026-10-18, 문서화 | README/refinement/development history 갱신 | R2 완료; 다음 R4 설계, epoch 값 미정 |
 
 # 23. Status Matrix
 
-[확실] **Snapshot: 2026-10-09 17:02:21 KST.** Official R2 output과 local MLflow 기준이며 이후 자동 갱신되지 않는다.
+[확실] **Snapshot: 2026-10-18 15:04:38 KST.** Official R2 output과 local MLflow 기준이며 이후 자동 갱신되지 않는다.
 
 | Work | Status |
 |---|---|
@@ -672,14 +780,18 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | workers8 official | FAILED / completed0 / no checkpoint |
 | workers4 smoke/profile5 | COMPLETED / DIAGNOSTIC ONLY |
 | R2 Fold1 | **COMPLETED / completed30 of30 / official F1 76.89%** |
-| R2 Fold2, current official condition | **RUNNING (local MLflow); epoch metric 없음** |
-| R2 Fold3 / Fold4 | **NOT RUN / NOT RUN** |
-| R2 official overall / 4-fold aggregation | **NOT AVAILABLE** |
-| R3~R5 | **PLANNED / VALUE NOT DECIDED** |
+| R2 Fold2 | **COMPLETED / completed30 of30 / official F1 79.84%** |
+| R2 completed folds / 4-fold training | **4 / 4 — COMPLETED** |
+| R2 Fold3 | **COMPLETED / epoch30 / final F1 81.36%** |
+| R2 Fold4 | **COMPLETED / epoch30 / final F1 82.89%; MLflow terminal status stale** |
+| R2 official aggregate / interpretation | **COMPLETED / COMPLETED** |
+| R2 official F1 | **80.24% ± 2.22%p (ddof=0)** |
+| Stage2 | **IN PROGRESS — R3~R5 Gate 후속 결정 대기** |
+| R3 / R4 / R5 | **OPTIONAL / RECOMMENDED / DEFER — 실행 값 미정** |
 | Context candidates | DOCUMENTED ONLY |
 | Context dedicated implementation | NOT STARTED |
 | EAR/MAR/Head Pose/Blink/Yawn/temporal rule | NOT STARTED |
 | Fusion implementation | NOT STARTED |
 | Final ablation matrix | NOT AVAILABLE |
 
-[확실] **NEXT:** R2 Fold2 completion → Fold3 → Fold4 → 4-fold aggregation → R0/R1/R2 comparison → R2 interpretation/R3~R5 Gate. **AFTER:** Stage3 Context Improvement → Behavior Detection → Fusion Detection.
+[확실] **NEXT:** R4 training-duration sensitivity design / R3~R5 refinement gate decision. Epoch 값/config/실행은 미정이다. **AFTER:** Stage3 Context Improvement → Behavior Detection → Fusion Detection.

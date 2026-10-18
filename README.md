@@ -20,23 +20,26 @@ SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구
 - `R1 FEATURE CACHE / 4-FOLD TRAINING: COMPLETED`
 - `R1 OFFICIAL F1: 76.91%`
 - `REFERENCE FEATURE POINT: FC1 (OFFICIAL F1 77.94%)`
-- `R2 VGG19 LAST-BLOCK FINE-TUNING: IMPLEMENTED / OFFICIAL FOLD1 COMPLETED`
+- `R2 VGG19 LAST-BLOCK FINE-TUNING: COMPLETED / 4 OF 4 FOLDS`
 - `R2 PREVIOUS FOLD1: INTERRUPTED AT EPOCH 25 / NO CHECKPOINT / NOT OFFICIAL`
 - `R2 EXECUTION: CUDA REQUIRED / WORKERS=4 / PREFETCH=1 / CHECKPOINT-RESUME ENABLED`
 - `R2 PROFILING: COMPLETED / DATALOADER EXECUTION SETTING SELECTED`
 - `R2 OFFICIAL FOLD1: EPOCH30 COMPLETED / FINAL F1 76.89%`
-- `R2 WORKERS=4 / PREFETCH=1: FULL FOLD1 RUN COMPLETED; ALL-FOLD STABILITY UNVERIFIED`
-- `R2 OFFICIAL OVERALL / 4-FOLD RESULT: NOT AVAILABLE`
-- `R2 FOLD2: RUNNING (MLFLOW SNAPSHOT 2026-10-09 17:02 KST); FOLD3~4: NOT RUN`
-- `NEXT: R2 FOLD2 COMPLETION, THEN FOLD3 / FOLD4 / 4-FOLD AGGREGATION`
+- `R2 OFFICIAL FOLD2: EPOCH30 COMPLETED / FINAL F1 79.84%`
+- `R2 OFFICIAL FOLD3 / FOLD4: EPOCH30 COMPLETED / FINAL F1 81.36% / 82.89%`
+- `R2 WORKERS=4 / PREFETCH=1: 4-FOLD FULL-RUN VALIDATED (INCLUDING RESUME)`
+- `R2 OFFICIAL AGGREGATE / INTERPRETATION: COMPLETED`
+- `R2 OFFICIAL F1: 80.24% ± 2.22%p / R2−R0 +2.30%p / R2−R1 +3.33%p`
+- `R3: OPTIONAL / R4: RECOMMENDED / R5: DEFER`
+- `NEXT: R4 TRAINING-DURATION SENSITIVITY DESIGN; EPOCH VALUE NOT DECIDED`
 - `MLFLOW TRACKING: READY FOR NEW REFINEMENT EXPERIMENTS`
 - `PROPOSED CONTEXT MODEL IMPROVEMENT: DEFERRED UNTIL RECONSTRUCTION REFINEMENT`
 
 ## Paper Reconstruction Baseline
 
-[확실] R2 Fold1 수치는 단일 fold의 final 결과이며 전체 성능 우위는 Fold2~4 완료 후 mean/population std로 판단합니다. 상세 결과와 실패 이력은 [refinement](docs/paper_reconstruction/reconstruction_refinement.md)와 [development history](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
+[확실] R2 epoch30 official 4-fold mean은 Accuracy **81.58% ± 2.19%p**, Precision **81.04% ± 2.89%p**, Recall **79.49% ± 2.06%p**, F1 **80.24% ± 2.22%p**입니다. Std는 population std(ddof=0)입니다. 상세 비교·진단·실패 이력은 [refinement](docs/paper_reconstruction/reconstruction_refinement.md)와 [development history](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
 
-[확실] 요청의 “Fold2~4 NOT RUN” 전제와 달리, 조회 시 Fold2 환경 JSON과 MLflow RUNNING 기록이 있었습니다. 문서 작업에서는 Fold2를 실행하지 않았습니다.
+[확실] Fold3/4는 중단 후 resume을 포함해 완료했습니다. Fold4는 final metric/model/artifact 저장을 확인했지만 종료 시 cp949 이모지 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. Stage2는 R3~R5 Gate 결정이 남아 IN PROGRESS이고 Stage3/Behavior/Fusion은 NOT STARTED입니다.
 
 ### Goal
 
