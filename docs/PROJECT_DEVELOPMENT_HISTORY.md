@@ -1,6 +1,6 @@
 # SUST-DDD Drowsiness Detection Project Development History
 
-[확실] **Last updated / R2 snapshot: 2026-10-18 15:04:38 KST (UTC+09:00).** R2 training/official aggregate/해석은 COMPLETED, official F1은80.24% ± 2.22%p다. 날짜별 과거 snapshot은 보존하며 최신 결과는10.2절과 status matrix를 따른다.
+[확실] **Last updated: 2026-10-18 KST — Stage2 scope closed / Stage3 DESIGN ONLY.** R2 training/official aggregate/해석은 COMPLETED, official F1은80.24% ± 2.22%p다. 날짜별 과거 snapshot은 보존하며 최신 상태는 status matrix와 Stage3 계획을 따른다.
 
 [확실] 이 문서는 프로젝트의 누적 연구·개발·실험·문제 해결 기록이다. 프로젝트는 **exact paper reproduction이 아니라 paper-informed reconstruction**이며, 실험하지 않은 결과를 만들지 않는다. **Official final result와 diagnostic result를 구분**하고, 확인되지 않은 정보는 미확인/미검증 또는 `NOT AVAILABLE`로 표시한다.
 
@@ -23,7 +23,7 @@ SUST-DDD 분석
 → Final Comparison (세부 ablation 설계는 NOT AVAILABLE)
 ```
 
-[확실] Stage 1 baseline, R1, R2 training/aggregate/해석은 완료했다. Stage2는 R3~R5 Gate의 후속 결정이 남아 `IN PROGRESS`다. Stage3 Context 및 Behavior/Fusion의 실행 로직은 `NOT STARTED`다. NEXT는 R4 duration sensitivity design이며 epoch 값은 미정이다.
+[확실] Stage1/R0/R1/R2와 R4 diagnostic을 마치고 Stage2를 COMPLETED로 종료했다. R3 OPTIONAL/NOT RUN, R4 MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN을 남긴 범위 종료다. Stage3는 DESIGN ONLY이며 첫 후보는 LSTM hidden-state mean pooling이다. Stage3/Behavior/Fusion 구현은 NOT STARTED다.
 
 # 2. Research Question and Scope
 
@@ -617,16 +617,18 @@ prefetch_factor: 1
 [확실] 다음 순서는 현재 문서 계획과 구현 상태를 바탕으로 정리한 남은 작업이며 이번 작성에서 실행하지 않았다.
 
 1. [확실] Fold1~4 epoch30 official final 수집과 mean/population std 집계, R0/R1/R2 비교 해석은 COMPLETED다.
-2. [확실] NEXT는 R4 fixed-duration sensitivity design 및 R3~R5 Gate의 후속 결정이다. R4 epoch 값/config를 만들지 않았다.
-3. [확실] R3 OPTIONAL, R4 RECOMMENDED, R5 DEFER다. 이후 Stage3 Context 개선 → Behavior 검출 → Fusion → Final Comparison을 계획한다.
+2. [확실] R4 고정15/30 diagnostic은 MIXED / INCONCLUSIVE로 마쳤다. F1 delta−0.22%p, epoch15 우위1/4folds여서 새 학습을 권장하지 않고 Stage2를 종료했다.
+3. [확실] NEXT는 Stage3 S3-1 mean hidden-state pooling 설계 검토다. R2 reference와 fixed30을 유지하며 코드/config/training은 별도 작업이다. 이후 Behavior → Fusion → Final Comparison을 계획한다.
 
-[확실] **R3~R5의 실행 값은 VALUE NOT DECIDED다.** 현재 Gate 권고와 실제 실행 조건 확정을 구분한다. R2 직후 Context로 건너뛰기로 확정한 것은 아니다.
+[확실] R3 OPTIONAL/NOT RUN, R4 DIAGNOSTIC COMPLETED/MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN이다. 미검증 조건을 부정한 것이 아니라 Stage2의 범위를 닫고 Context 설계로 이동한 결정이다.
 
 [확실] `train_r2_vgg19.py`는 `--fold` 없이 네 fold를 실행할 때 CV summary를 만든다. 이번 별도 실행 output은 최종 resume 경로를 골라 읽기 전용으로 집계하고 문서에 기록했다. 새 aggregate output 파일 생성이나 기존 결과 재학습/덮어쓰기는 수행하지 않았다.
 
 # 16. Planned Context Improvement
 
-[확실] 문서의 후보는 BiLSTM, Attention, Temporal Pooling, Feature Bottleneck/Projection이다. 상태는 **DOCUMENTED ONLY**이며 전용 code/config/result는 **NOT STARTED**다. 확정 architecture, 비교 조건, 성공 기준은 `NOT AVAILABLE`다.
+[확실] 현재 Stage3는 **DESIGN ONLY / NOT RUN**이다. [Stage3 계획](context_model/stage3_context_improvement_plan.md)에서 BiLSTM/Attention/Pooling/Projection을 비교하고 S3-1 uniform mean pooling을 첫 단일 변경으로 추천했다. 기존 R2 reference와 fixed30을 유지하고 구현은 아직 없다.
+
+[확실] 후보 BiLSTM/Attention/Temporal Pooling/Feature Bottleneck은 DOCUMENTED ONLY다. 첫 mean pooling 비교 조건과 판단 기준은 Stage3 계획에 설계했으며, 전용 code/config는 NOT STARTED, 실험 결과는 NOT AVAILABLE이다.
 
 [확실] GRU 등 문서에서 확인되지 않은 후보를 이 계획에 추가하지 않았다. 현재 VGG spatial pooling과 계획된 temporal pooling은 구분한다.
 
@@ -762,10 +764,12 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | 2026-10-15 22:17:26 KST, final model | Fold4 resume22~30 완료 | Final F1 82.89%; 종료 시 cp949 오류로 MLflow 상태 잔존 |
 | 2026-10-16, 집계/저장 검증 | 네 fold final 수집·4-fold 집계·해석; MLflow 저장 확인 후 서버 종료 | R2 official F1 80.24% ± 2.22%p; R4 권고 |
 | 2026-10-18, 문서화 | README/refinement/development history 갱신 | R2 완료; 다음 R4 설계, epoch 값 미정 |
+| 2026-10-18, R4 diagnostic | 공통15/30 비교: F1 delta−0.22%p, epoch15 우위1/4folds | MIXED / INCONCLUSIVE; 새 학습 권장 안 함 |
+| 2026-10-18, 범위 결정·설계 | Stage2 종료; Stage3 R2 reference/mean pooling 설계 | Stage2 COMPLETED; Stage3 DESIGN ONLY / NOT RUN |
 
 # 23. Status Matrix
 
-[확실] **Snapshot: 2026-10-18 15:04:38 KST.** Official R2 output과 local MLflow 기준이며 이후 자동 갱신되지 않는다.
+[확실] **Snapshot: 2026-10-18 KST — Stage2 종료 후.** R2 결과와 기존 MLflow 저장 기록을 유지하고 R4 diagnostic 및 Stage3 설계 상태를 반영했다.
 
 | Work | Status |
 |---|---|
@@ -786,12 +790,15 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | R2 Fold4 | **COMPLETED / epoch30 / final F1 82.89%; MLflow terminal status stale** |
 | R2 official aggregate / interpretation | **COMPLETED / COMPLETED** |
 | R2 official F1 | **80.24% ± 2.22%p (ddof=0)** |
-| Stage2 | **IN PROGRESS — R3~R5 Gate 후속 결정 대기** |
-| R3 / R4 / R5 | **OPTIONAL / RECOMMENDED / DEFER — 실행 값 미정** |
+| Stage2 | **COMPLETED — scope closed** |
+| R3 | **OPTIONAL / NOT RUN** |
+| R4 | **DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED** |
+| R5 | **DEFER / NOT RUN** |
+| Stage3 | **DESIGN ONLY / NOT RUN — S3-1 mean hidden-state pooling** |
 | Context candidates | DOCUMENTED ONLY |
 | Context dedicated implementation | NOT STARTED |
 | EAR/MAR/Head Pose/Blink/Yawn/temporal rule | NOT STARTED |
 | Fusion implementation | NOT STARTED |
 | Final ablation matrix | NOT AVAILABLE |
 
-[확실] **NEXT:** R4 training-duration sensitivity design / R3~R5 refinement gate decision. Epoch 값/config/실행은 미정이다. **AFTER:** Stage3 Context Improvement → Behavior Detection → Fusion Detection.
+[확실] **NEXT:** Stage3 S3-1 설계 검토 후 별도 구현 범위 결정. **AFTER:** Context 실험 → Behavior Detection → Fusion Detection. 이번 작업은 설계까지이며 학습/config/구현을 수행하지 않았다.

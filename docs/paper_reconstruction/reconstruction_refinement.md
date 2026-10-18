@@ -6,8 +6,8 @@
 
 ```text
 Stage 1 — INITIAL PAPER-INFORMED RECONSTRUCTION BASELINE: COMPLETED
-Stage 2 — PAPER RECONSTRUCTION REFINEMENT: IN PROGRESS
-Stage 3 — PROPOSED CONTEXT MODEL IMPROVEMENT: NOT STARTED
+Stage 2 — PAPER RECONSTRUCTION REFINEMENT: COMPLETED (SCOPE CLOSED)
+Stage 3 — PROPOSED CONTEXT MODEL IMPROVEMENT: DESIGN ONLY / NOT RUN
 ```
 
 Stage 1에서는 원논문에서 확인되는 구조와 parameter count로부터 추론한 구조를 바탕으로 VGG19/VGG16 + LSTM baseline을 구현하고 4-fold 실험을 완료했다. 그러나 현재 결과와 원논문 Table III 사이에는 상당한 차이가 있으므로, Paper Reconstruction 전체가 완료되었다고 표현하지 않는다.
@@ -466,7 +466,7 @@ R1 feature cache와 4-fold training은 완료되었으며 결과는 위 비교�
 
 ```text
 INITIAL PAPER-INFORMED BASELINE: COMPLETED
-RECONSTRUCTION REFINEMENT: IN PROGRESS
+RECONSTRUCTION REFINEMENT: COMPLETED (SCOPE CLOSED)
 PRIMARY BACKBONE: VGG19
 R0: COMPLETED
 R1: COMPLETED
@@ -499,9 +499,11 @@ MLFLOW FOLD1 PARENT / CHILD: FINISHED / FINISHED
 MLFLOW FOLD2 PARENT / CHILD: FINISHED / FINISHED
 MLFLOW FOLD3: FINISHED
 MLFLOW FOLD4: TRAINING RESULT COMPLETED / TERMINAL STATUS STALE (RUNNING)
-R3: OPTIONAL / R4: RECOMMENDED / R5: DEFER
-NEXT: R4 TRAINING-DURATION SENSITIVITY DESIGN (VALUE NOT DECIDED)
-PROPOSED CONTEXT MODEL IMPROVEMENT: NOT STARTED
+R3: OPTIONAL / NOT RUN
+R4: DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED
+R5: DEFER / NOT RUN
+NEXT: STAGE3 S3-1 DESIGN REVIEW — HIDDEN-STATE MEAN POOLING
+PROPOSED CONTEXT MODEL IMPROVEMENT: DESIGN ONLY / NOT RUN
 ```
 
 
@@ -1087,3 +1089,11 @@ artifact는 보존했다. 새 training/benchmark, 전체 pytest 또는 전체 da
 | R5 preprocessing/sampling | **DEFER** | 현재 결과에서 해당 정책이 주요 문제라는 직접 근거 없음 |
 
 [확실] 추천은 후속 연구 판단이며 실행 조건 확정은 아니다. **NEXT: R4 training-duration sensitivity design / R3~R5 refinement gate decision.** R4 epoch 값, config, 학습을 이 작업에서 정하거나 만들지 않았다. 원논문 score를 목표로 test 결과에 맞춰 무제한 탐색하지 않고 다음 조건은 실행 전에 사전 정의한다.
+
+## Stage2 closure and Stage3 design (2026-10-18)
+
+[확실] 위 R4 권고는 diagnostic 수행 전의 기록이다. 이후 `r4_training_duration_plan.md`의 고정15/30 분석을 완료했다. Epoch15 F1은80.03% ± 1.95%p, epoch30 official은80.24% ± 2.22%p, 차이는−0.22%p이며 epoch15 우위는1/4folds다. 결론은 MIXED / INCONCLUSIVE이고 새 fixed-duration 학습을 권장하지 않는다. Epoch15를 official reference로 교체하지 않는다.
+
+[확실] **Stage2: COMPLETED — scope closed.** R1 feature point의 official 개선은 없었고 R2 adaptation은 F1+2.30%p/Recall+4.21%p를 보였다. R4 shorter duration의 일관 개선이 없으며 R3/R5가 주요 원인이라는 직접 근거는 부족하다. 따라서 R3 OPTIONAL/NOT RUN, R5 DEFER/NOT RUN으로 남기고 제한된 sensitivity 단계의 범위를 종료한다. 모든 미공개 조건을 검증하거나 paper gap을 해결했다는 뜻은 아니다.
+
+[확실] **Stage3: DESIGN ONLY / NOT RUN.** R2 epoch30을 reference로, 첫 S3-1은 LSTM final-hidden 대신 전체20 hidden states의 uniform mean pooling만 바꾸는 설계다. Fixed30과 나머지 연구 조건을 유지한다. [Stage3 계획](../context_model/stage3_context_improvement_plan.md)에 후보 비교·계산 비용·평가·Gate를 기록했다. Model/config/training과 Behavior/Fusion 구현은 수행하지 않았다.

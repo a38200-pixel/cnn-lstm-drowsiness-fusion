@@ -15,7 +15,7 @@ SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구
 - `EARLY STOPPING: NOT USED`
 - `BEST CHECKPOINT SELECTION: NOT USED`
 - `OFFICIAL RESULT: FIXED EPOCH / FINAL EPOCH`
-- `RECONSTRUCTION REFINEMENT: IN PROGRESS`
+- `RECONSTRUCTION REFINEMENT / STAGE2: COMPLETED`
 - `R1 VGG19 FC2: COMPLETED`
 - `R1 FEATURE CACHE / 4-FOLD TRAINING: COMPLETED`
 - `R1 OFFICIAL F1: 76.91%`
@@ -30,16 +30,17 @@ SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구
 - `R2 WORKERS=4 / PREFETCH=1: 4-FOLD FULL-RUN VALIDATED (INCLUDING RESUME)`
 - `R2 OFFICIAL AGGREGATE / INTERPRETATION: COMPLETED`
 - `R2 OFFICIAL F1: 80.24% ± 2.22%p / R2−R0 +2.30%p / R2−R1 +3.33%p`
-- `R3: OPTIONAL / R4: RECOMMENDED / R5: DEFER`
-- `NEXT: R4 TRAINING-DURATION SENSITIVITY DESIGN; EPOCH VALUE NOT DECIDED`
+- `R3: OPTIONAL / NOT RUN; R5: DEFER / NOT RUN`
+- `R4: DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED`
+- `NEXT: STAGE3 S3-1 DESIGN REVIEW — LSTM HIDDEN-STATE MEAN POOLING`
 - `MLFLOW TRACKING: READY FOR NEW REFINEMENT EXPERIMENTS`
-- `PROPOSED CONTEXT MODEL IMPROVEMENT: DEFERRED UNTIL RECONSTRUCTION REFINEMENT`
+- `PROPOSED CONTEXT MODEL IMPROVEMENT / STAGE3: DESIGN ONLY / NOT RUN`
 
 ## Paper Reconstruction Baseline
 
 [확실] R2 epoch30 official 4-fold mean은 Accuracy **81.58% ± 2.19%p**, Precision **81.04% ± 2.89%p**, Recall **79.49% ± 2.06%p**, F1 **80.24% ± 2.22%p**입니다. Std는 population std(ddof=0)입니다. 상세 비교·진단·실패 이력은 [refinement](docs/paper_reconstruction/reconstruction_refinement.md)와 [development history](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
 
-[확실] Fold3/4는 중단 후 resume을 포함해 완료했습니다. Fold4는 final metric/model/artifact 저장을 확인했지만 종료 시 cp949 이모지 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. Stage2는 R3~R5 Gate 결정이 남아 IN PROGRESS이고 Stage3/Behavior/Fusion은 NOT STARTED입니다.
+[확실] Fold3/4는 중단 후 resume을 포함해 완료했습니다. Fold4는 final metric/model/artifact 저장을 확인했지만 종료 시 cp949 이모지 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. R4 diagnostic에서 shorter duration의 일관 개선이 없어 Stage2 범위를 종료했습니다. [Stage3 계획](docs/context_model/stage3_context_improvement_plan.md)은 DESIGN ONLY이며 Stage3 구현과 Behavior/Fusion은 NOT STARTED입니다.
 
 ### Goal
 
