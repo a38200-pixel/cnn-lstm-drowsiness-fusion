@@ -1,0 +1,70 @@
+experiment:
+  stage: "context_model_improvement"
+  condition_id: "S3_1_temporal_mean"
+  result_role: "official"
+
+data:
+  sequence_metadata: "data/sequences/paper_reconstruction_20frame.csv"
+  split_root: "data/splits/paper_reconstruction"
+
+cnn:
+  backbone: "vgg19"
+  pretrained: true
+  feature_point: "fc1"
+  feature_dim: 4096
+  cnn_training_policy: "last_block_finetune"
+  frozen_blocks: [1, 2, 3, 4]
+  trainable_blocks: [5]
+  fc1_trainable: false
+  input_size: [224, 224]
+  normalization: "imagenet"
+
+sequence:
+  length: 20
+
+lstm:
+  input_size: 4096
+  hidden_size: 512
+  num_layers: 1
+  batch_first: true
+
+temporal_readout: mean
+
+classifier:
+  hidden_1: 512
+  hidden_2: 64
+  num_classes: 2
+  activation_1: "relu"
+  activation_2: "sigmoid"
+
+cross_validation:
+  folds: 4
+  seed: 42
+
+training:
+  epochs: 30
+  batch_size: 16
+  optimizer: "adam"
+  cnn_learning_rate: 0.00001
+  temporal_learning_rate: 0.0001
+  weight_decay: 0.00001
+  scheduler: "none"
+  validation: "none"
+  early_stopping: false
+  checkpoint_selection: "final_epoch"
+  amp: false
+  device: "cuda"
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: true
+  prefetch_factor: 1
+  seed: 42
+
+mlflow:
+  enabled: true
+  tracking_uri: "http://127.0.0.1:5000"
+  experiment_name: "context-model-improvement"
+  parent_run_name: "S3_1_temporal_mean"
+
+output:
+  root: "outputs/context_model/S3_1_temporal_mean"

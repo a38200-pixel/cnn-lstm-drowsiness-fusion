@@ -1,6 +1,6 @@
 # SUST-DDD Drowsiness Detection Project Development History
 
-[확실] **Last updated: 2026-10-18 KST — Stage2 scope closed / Stage3 DESIGN ONLY.** R2 training/official aggregate/해석은 COMPLETED, official F1은80.24% ± 2.22%p다. 날짜별 과거 snapshot은 보존하며 최신 상태는 status matrix와 Stage3 계획을 따른다.
+[확실] **Last updated: 2026-10-18 KST — Stage2 scope closed / S3-1 IMPLEMENTED / TRAINING NOT RUN.** R2 training/official aggregate/해석은 COMPLETED, official F1은80.24% ± 2.22%p다. 날짜별 과거 snapshot은 보존하며 최신 상태는 status matrix와 Stage3 계획을 따른다.
 
 [확실] 이 문서는 프로젝트의 누적 연구·개발·실험·문제 해결 기록이다. 프로젝트는 **exact paper reproduction이 아니라 paper-informed reconstruction**이며, 실험하지 않은 결과를 만들지 않는다. **Official final result와 diagnostic result를 구분**하고, 확인되지 않은 정보는 미확인/미검증 또는 `NOT AVAILABLE`로 표시한다.
 
@@ -23,7 +23,7 @@ SUST-DDD 분석
 → Final Comparison (세부 ablation 설계는 NOT AVAILABLE)
 ```
 
-[확실] Stage1/R0/R1/R2와 R4 diagnostic을 마치고 Stage2를 COMPLETED로 종료했다. R3 OPTIONAL/NOT RUN, R4 MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN을 남긴 범위 종료다. Stage3는 DESIGN ONLY이며 첫 후보는 LSTM hidden-state mean pooling이다. Stage3/Behavior/Fusion 구현은 NOT STARTED다.
+[확실] Stage1/R0/R1/R2와 R4 diagnostic을 마치고 Stage2를 COMPLETED로 종료했다. R3 OPTIONAL/NOT RUN, R4 MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN을 남긴 범위 종료다. Stage3는 IN PROGRESS이며 S3-1 hidden-state mean pooling은 IMPLEMENTED/TRAINING NOT RUN이다. Behavior/Fusion은 NOT STARTED다.
 
 # 2. Research Question and Scope
 
@@ -626,9 +626,9 @@ prefetch_factor: 1
 
 # 16. Planned Context Improvement
 
-[확실] 현재 Stage3는 **DESIGN ONLY / NOT RUN**이다. [Stage3 계획](context_model/stage3_context_improvement_plan.md)에서 BiLSTM/Attention/Pooling/Projection을 비교하고 S3-1 uniform mean pooling을 첫 단일 변경으로 추천했다. 기존 R2 reference와 fixed30을 유지하고 구현은 아직 없다.
+[확실] 현재 Stage3는 **IN PROGRESS**, S3-1은 **IMPLEMENTED / TRAINING NOT RUN**이다. [Stage3 계획](context_model/stage3_context_improvement_plan.md)의 uniform mean pooling을 구현하고 기존 R2 reference/fixed30을 유지했다. 다른 후보는 구현하지 않았다.
 
-[확실] 후보 BiLSTM/Attention/Temporal Pooling/Feature Bottleneck은 DOCUMENTED ONLY다. 첫 mean pooling 비교 조건과 판단 기준은 Stage3 계획에 설계했으며, 전용 code/config는 NOT STARTED, 실험 결과는 NOT AVAILABLE이다.
+[확실] BiLSTM/Attention/Feature Bottleneck은 DOCUMENTED ONLY다. Mean pooling 전용 code/config/script와 synthetic/meta 검증은 완료했지만 실제 실험 결과는 NOT AVAILABLE이다.
 
 [확실] GRU 등 문서에서 확인되지 않은 후보를 이 계획에 추가하지 않았다. 현재 VGG spatial pooling과 계획된 temporal pooling은 구분한다.
 
@@ -766,6 +766,7 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | 2026-10-18, 문서화 | README/refinement/development history 갱신 | R2 완료; 다음 R4 설계, epoch 값 미정 |
 | 2026-10-18, R4 diagnostic | 공통15/30 비교: F1 delta−0.22%p, epoch15 우위1/4folds | MIXED / INCONCLUSIVE; 새 학습 권장 안 함 |
 | 2026-10-18, 범위 결정·설계 | Stage2 종료; Stage3 R2 reference/mean pooling 설계 | Stage2 COMPLETED; Stage3 DESIGN ONLY / NOT RUN |
+| 2026-10-18, S3-1 구현 | 전용 model/config/script 및 backward-compatible LSTM sequence 옵션 | 35 targeted tests 통과; IMPLEMENTED / TRAINING NOT RUN |
 
 # 23. Status Matrix
 
@@ -794,11 +795,13 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | R3 | **OPTIONAL / NOT RUN** |
 | R4 | **DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED** |
 | R5 | **DEFER / NOT RUN** |
-| Stage3 | **DESIGN ONLY / NOT RUN — S3-1 mean hidden-state pooling** |
+| Stage3 | **IN PROGRESS — S3-1 mean hidden-state pooling IMPLEMENTED / TRAINING NOT RUN** |
 | Context candidates | DOCUMENTED ONLY |
-| Context dedicated implementation | NOT STARTED |
+| Context dedicated implementation | S3-1 IMPLEMENTED; training/results NOT RUN/NOT AVAILABLE |
 | EAR/MAR/Head Pose/Blink/Yawn/temporal rule | NOT STARTED |
 | Fusion implementation | NOT STARTED |
 | Final ablation matrix | NOT AVAILABLE |
 
-[확실] **NEXT:** Stage3 S3-1 설계 검토 후 별도 구현 범위 결정. **AFTER:** Context 실험 → Behavior Detection → Fusion Detection. 이번 작업은 설계까지이며 학습/config/구현을 수행하지 않았다.
+[확실] **NEXT:** S3-1 구현 검토 후 사용자 실행의 CUDA smoke/official Fold1. **AFTER:** Context 비교 → Behavior Detection → Fusion Detection. 이번에는 synthetic/meta 검증까지만 수행하고 실제 학습은 실행하지 않았다.
+
+[확실] **S3-1 implementation (2026-10-18):** Stage2 completed → Stage3 design → S3-1 Temporal Mean Pooling implemented. 전용 model/config/script와35개 targeted test 통과를 기록한다. R2 default final-hidden은 유지하고 S3만 모든 hidden states의 평균을 사용한다. Parameter 수는 동일하며 output/MLflow는 Stage3 전용으로 분리했다. Full training과 실제 dataset 처리는 NOT RUN이고 성능 결과는 NOT AVAILABLE이다.

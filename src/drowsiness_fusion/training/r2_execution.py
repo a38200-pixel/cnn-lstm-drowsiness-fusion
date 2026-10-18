@@ -26,7 +26,8 @@ def environment(config, fold, device):
         "cuda_version": torch.version.cuda, "cudnn_version": torch.backends.cudnn.version(),
         "python_version": platform.python_version(), "mixed_precision": False,
         "batch_size": int(training["batch_size"]), **loader_settings(training),
-        "condition_id": "R2", "fold": fold, "seed": int(training["seed"]),
+        "condition_id": config.get("experiment", {}).get("condition_id", "R2"),
+        "fold": fold, "seed": int(training["seed"]),
     }
 
 
@@ -45,7 +46,9 @@ def save_checkpoint(path, model, optimizer, epoch, config, fold, history, genera
         "torch_rng": torch.get_rng_state(),
         "cuda_rng": torch.cuda.get_rng_state_all() if torch.cuda.is_available() else [],
         "loader_rng": generator.get_state(), "config": config,
-        "fold": fold, "condition_id": "R2", "history": history,
+        "fold": fold,
+        "condition_id": config.get("experiment", {}).get("condition_id", "R2"),
+        "history": history,
     }
     path = Path(path)
     temporary = path.with_name(path.name + ".tmp")
@@ -56,7 +59,8 @@ def save_checkpoint(path, model, optimizer, epoch, config, fold, history, genera
 def load_checkpoint(path, model, optimizer, config, fold, generator):
     # Only load user-selected, trusted local checkpoints (contains Python/NumPy RNG objects).
     state = torch.load(path, map_location="cpu", weights_only=False)
-    if (state["condition_id"] != "R2" or state["fold"] != fold
+    condition_id = config.get("experiment", {}).get("condition_id", "R2")
+    if (state["condition_id"] != condition_id or state["fold"] != fold
             or config_with_effective_loader_settings(state["config"])
             != config_with_effective_loader_settings(config)):
         raise ValueError("Resume checkpoint fold/config/condition does not match this experiment.")

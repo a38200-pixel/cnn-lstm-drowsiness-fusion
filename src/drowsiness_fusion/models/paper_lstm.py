@@ -40,8 +40,10 @@ class KerasCompatibleLSTM(nn.Module):
         nn.init.uniform_(self.weight_hidden, -bound, bound)
         nn.init.uniform_(self.bias, -bound, bound)
 
-    def forward(self, sequence: torch.Tensor) -> torch.Tensor:
-        """Batch-first sequence를 순회해 마지막 timestep의 hidden state를 반환한다."""
+    def forward(
+        self, sequence: torch.Tensor, *, return_sequences: bool = False
+    ) -> torch.Tensor:
+        """Return the final hidden state, or all states for an explicit sequence readout."""
 
         if sequence.ndim != 3 or sequence.shape[2] != self.input_size:
             raise ValueError(
@@ -50,6 +52,7 @@ class KerasCompatibleLSTM(nn.Module):
         batch_size = sequence.shape[0]
         hidden = sequence.new_zeros(batch_size, self.hidden_size)
         cell = sequence.new_zeros(batch_size, self.hidden_size)
+        hidden_states = [] if return_sequences else None
         for timestep in range(sequence.shape[1]):
             gates = F.linear(sequence[:, timestep], self.weight_input, self.bias)
             gates = gates + F.linear(hidden, self.weight_hidden)
@@ -60,6 +63,10 @@ class KerasCompatibleLSTM(nn.Module):
             output_gate = torch.sigmoid(output_gate)
             cell = forget_gate * cell + input_gate * candidate
             hidden = output_gate * torch.tanh(cell)
+            if hidden_states is not None:
+                hidden_states.append(hidden)
+        if hidden_states is not None:
+            return torch.stack(hidden_states, dim=1)
         return hidden
 
 

@@ -1,6 +1,6 @@
 # Stage 3 — Proposed Context Model Improvement
 
-[확실] 작성일: 2026-10-18 KST. **DESIGN ONLY / NOT RUN**. Stage2 종료 결정과 별개로 Stage3 model/config/training은 아직 없다. 이 문서는 architecture·조건·평가·의사결정 설계이며 코드/config를 생성하거나 학습을 실행하지 않는다.
+[확실] 작성/구현 갱신일: 2026-10-18 KST. **S3-1 IMPLEMENTED / TRAINING NOT RUN**. Stage2는 COMPLETED, Stage3는 IN PROGRESS다. 아래 설계 조건을 유지해 전용 model/config/script와 targeted tests를 구현했으며 실제 학습 결과는 없다.
 
 ## 1. Motivation
 
@@ -94,7 +94,7 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 
 [확실] 기존 single-bias gate equations, hidden512, initial states, parameter initialization과 sequence 순서를 유지한다. Padding 없이 실제20 slots를 사용하고 기존 deterministic sampling의 중복 처리 정책을 바꾸지 않는다. 별도 positional weight, attention, max pooling, projection, dropout, layer 추가를 섞지 않는다.
 
-[확실] 현재 custom LSTM은 마지막 hidden만 반환하므로 향후 구현에는 sequence states를 readout으로 제공하는 경로가 필요하다. R2의 기존 default 동작은 보존하고 기존 cell을 다른 LSTM 구현으로 교체하지 않는 것이 구현 경계다. 이번 작업에서는 이 경로를 구현하지 않았다.
+[확실] Custom LSTM에 optional `return_sequences=False`를 추가했다. 기본값은 기존 final hidden을 그대로 반환하고 S3-1만 True로 전체 hidden sequence를 얻어 `mean(dim=1)`을 사용한다. Gate equations/weights/state keys와 R2 모델 파일은 유지했다.
 
 [확실] 설계상 전체132,523,778 / trainable19,174,082 / frozen113,349,696 parameters는 R2와 같다. Pooling parameter는0이며 Adam group도 block5와 LSTM/head의 기존 두 group을 유지한다. 추가 group/LR는 필요하지 않다. 실제 구현 후 parameter coverage와 counts를 검증해야 한다.
 
@@ -157,10 +157,10 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 | ID | Scope | Additional training | Gate |
 |---|---|---|---|
 | **S3-0** | Existing R2 reference | **0** | Output/조건/상태 provenance 확인; 새 실행으로 부르지 않음 |
-| **S3-1** | Mean hidden-state pooling only | **승인·구현 후4folds×30epochs** | 기존 LSTM 보존·parameter/gradient 검증 후 독립 output/run; 이번에는 NOT RUN |
+| **S3-1** | Mean hidden-state pooling only — IMPLEMENTED | **향후4folds×30epochs; 현재 NOT RUN** | Synthetic/meta targeted tests 통과; 실데이터 CUDA smoke/full training 미실행 |
 | **S3-2** | Conditional second context experiment | **미정** | S3-1이 가치 있을 때만 별도 설계; 후보 조합 자동 실행 금지 |
 
-[확실] **NEXT:** Stage3 설계 검토 후 별도 요청으로 S3-1 구현 범위를 정한다. 먼저 코드/config를 만드는 것은 이번 작업 범위가 아니다. R3/R5를 재개하거나 Stage2를 다시 여는 것도 별도 결정이다.
+[확실] **NEXT:** 구현 검토 후 사용자 요청으로 CUDA/실데이터 bounded smoke 또는 official Fold1을 별도 실행한다. 이번에는 full training과 실제 dataset 처리를 하지 않았다. R3/R5 재개는 별도 결정이다.
 
 ## 14. Status
 
@@ -171,10 +171,24 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 | R3 | OPTIONAL / NOT RUN |
 | R4 | DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED |
 | R5 | DEFER / NOT RUN |
-| Stage3 Proposed Context Model Improvement | **DESIGN ONLY** |
+| Stage3 Proposed Context Model Improvement | **IN PROGRESS** |
 | S3-0 reference selection | R2 epoch30 official; existing artifacts |
-| S3-1 architecture/config implementation | **NOT STARTED** |
+| S3-1 architecture/config/script | **IMPLEMENTED** |
 | S3-1 training/results | **NOT RUN / NOT AVAILABLE** |
 | Behavior / Fusion | **NOT STARTED / NOT STARTED** |
 
-[확실] 이 문서는 설계만 기록한다. 학습/config 생성/model·trainer 변경/Stage3·Behavior·Fusion 구현/dataset scan은 수행하지 않았다.
+[확실] Implementation snapshot: 전용 `stage3_temporal_mean.py`, `stage3_s3_1_temporal_mean.yaml`, `train_stage3_s3_1.py`를 생성했다. LSTM 옵션과 공용 checkpoint/environment의 condition ID만 확장했으며 기존 R2 semantics는 회귀 테스트로 확인했다. Attention/BiLSTM/Bottleneck/Behavior/Fusion은 구현하지 않았다.
+
+[확실] Parameter count는 meta-device의 실제 VGG19 구조에서 total132,523,778 / trainable19,174,082 / frozen113,349,696으로 R2와 같았다. 작은 VGG-compatible mock에 synthetic [1,20,3,224,224]를 넣어 hidden[1,20,512]→mean[1,512]→logits[1,2]와 gradient policy를 확인했다. Targeted tests35개가 통과했으며 pretrained 다운로드/실제 영상 decode/full training은 실행하지 않았다. 실제 GPU memory/runtime와 S3-1 성능은 NOT AVAILABLE이다.
+
+[확실] MLflow experiment는 `context-model-improvement`, parent/condition은 `S3_1_temporal_mean`, child는 `fold_1`~`fold_4`다. Stage2와 목적을 구분하며 reference R2와 temporal_readout=mean을 tag로 남긴다. Windows cp949 종료 오류를 피하도록 전용 script stdout/stderr를 UTF-8로 설정했다.
+
+[확실] Checkpoint는 epoch 완료 후 model/optimizer/epoch/history/config/fold/RNG/shuffle generator를 기존 atomic 방식으로 저장한다. Condition ID와 config를 검증해 R2 checkpoint를 S3 resume에 사용하는 것을 거부한다. Synthetic checkpoint에서 next update/RNG 복원과 잘못된 fold/readout/condition 거부를 테스트했다. 실제 CUDA multiprocess resume의 bitwise 동일성은 미검증이다.
+
+[확실] 출력은 `outputs/context_model/` 안의 새 경로만 허용한다. 신규 학습은 fresh ImageNet/seed initialization이며 R2 학습 checkpoint로 warm-start하지 않는다. 다음은 사용자 실행용 명령이며 이번에 실행하지 않았다. MLflow 서버가 실행 중이고 출력 폴더가 미사용이어야 한다.
+
+```powershell
+.\.venv\Scripts\python.exe scripts/train_stage3_s3_1.py --config configs/context_model/stage3_s3_1_temporal_mean.yaml --fold 1 --output-root outputs/context_model/S3_1_temporal_mean_fold1_official
+```
+
+[확실] Resume할 때는 동일 S3-1 config와 `--fold 1 --resume-from <trusted-S3-checkpoint> --output-root <new-path-under-outputs/context_model>`을 사용한다. 같은 condition/config/fold의 저장 epoch+1부터 새 run에 기록한다. S3-1 training/result는 계속 NOT RUN/NOT AVAILABLE이다.
