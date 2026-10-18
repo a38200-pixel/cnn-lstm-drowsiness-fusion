@@ -1,6 +1,6 @@
 # R4 Training Duration Refinement
 
-[확실] 작성일: 2026-10-18 KST. 상태: **DESIGN ONLY / NOT RUN**. 이 문서는 실행 전에 분석 범위·후보·판단 규칙을 고정하는 계획이다. 기존 R2 held-out test history를 이미 관찰했으므로 **test 노출 이전의 독립적 preregistration으로 주장하지 않는다.** 작성 후 변경은 이유와 날짜를 남기고, 변경 전후 결과를 선택적으로 보고하지 않는다.
+[확실] 작성일: 2026-10-18 KST. 최신 상태: **R4 DIAGNOSTIC COMPLETED / R4 NEW TRAINING NOT RUN**. 아래 설계는 분석 전에 고정했으며 같은 날짜의 Diagnostic Result에 결과를 추가했다. 기존 R2 held-out test history를 이미 관찰했으므로 **test 노출 이전의 독립적 preregistration으로 주장하지 않는다.** 작성 후 변경은 이유와 날짜를 남기고, 변경 전후 결과를 선택적으로 보고하지 않는다.
 
 [확실] 이 계획서만 생성한다. 학습/profile/benchmark/dataset scan, config 생성, 코드 변경, R3/R5 실행, Stage3 구현을 수행하지 않는다. 기존 결과를 수정하지 않는다.
 
@@ -133,7 +133,7 @@
 
 ## Expected Compute
 
-[확실] **권장안은 추가 학습0, GPU 학습 점유시간0**이다. 향후 승인된 작은 JSON/history의15/30 집계만 필요하며 전체 video scan이나 feature extraction은 필요하지 않다. 이번 작성에서는15/30 비교 metric을 새로 집계하지 않았다.
+[확실] **권장안은 추가 학습0, GPU 학습 점유시간0**이다. 작은 JSON/history의15/30 집계만 필요하며 전체 video scan이나 feature extraction은 필요하지 않다. 계획 작성 시에는 비교 metric을 집계하지 않았고, 후속 요청으로 수행한 결과는 아래 Diagnostic Result에 기록했다.
 
 [확실] 비교용 비용 추정의 기준은 기존 history에서 timing이 있는 epoch의 fold별 평균 약69.85~75.17분이다. Fold3는28개, Fold4는29개 timing만 최종 history에 남아 있어 이를 완전한 총 wall-time으로 사용하지 않았다. Epoch30 한 개의67~73분을 전체30-epoch 시간으로 혼동하지 않는다.
 
@@ -167,14 +167,91 @@
 
 | Work | Status |
 |---|---|
-| R4 plan | **DESIGN ONLY** |
+| R4 plan | DESIGN ONLY로 고정한 분석 범위 유지; 아래 Diagnostic Result 추가 |
 | Registered analysis contrast | **15 vs30; common across all4folds** |
 | Recommended strategy | **A — existing history diagnostic; no additional training** |
-| Plan-specific15/30 aggregate | **NOT RUN** |
+| Plan-specific15/30 aggregate | **R4 DIAGNOSTIC COMPLETED** |
 | New R4 fixed-duration training / official aggregate | **NOT RUN / NOT AVAILABLE** |
 | R4 config / code change | **NOT CREATED / NOT CHANGED** |
 | Existing R2 epoch30 reference | COMPLETED; reusable subject to stated conditions |
 | R3 / R5 | **OPTIONAL / DEFER** |
 | Stage3 Context implementation | **NOT STARTED** |
 
-[확실] **NEXT:** 이 계획을 확인한 뒤 고정15/30의 retrospective diagnostic 집계를 별도 요청 범위에서 수행한다. 새 학습이나 official reference 변경은 이번에 실행하지 않는다.
+[확실] 고정15/30 집계를 아래에 기록했다. **NEXT 권고:** R4를 diagnostic으로 종료하고 Stage2 종료 여부를 결정한 뒤 Stage3 Context Improvement 범위를 설계한다. Stage2 종료나 Stage3 구현은 이번 작업에서 확정·실행하지 않는다. 새 학습과 official reference 변경은 없다.
+
+## Diagnostic Result
+
+[확실] 분석일: **2026-10-18 KST**. **R4 DIAGNOSTIC: COMPLETED / R4 NEW TRAINING: NOT RUN**. 사전 고정한 공통 epoch15와30만 사용했고 다른 duration을 탐색하거나 후보를 변경하지 않았다. 이 절은 **R4 DIAGNOSTIC ONLY**인 retrospective sensitivity analysis다. Epoch30은 기존 R2 official reference로 유지한다.
+
+### Source and validation
+
+[확실] R2 Evidence에 명시한 네 최종 output의 `history.json`만 source of truth로 사용했다. Fold3는 `R2_cuda_fold3_resume_next/fold_3/history.json`, Fold4는 `R2_cuda_fold4_resumed_20261015/fold_4/history.json`이며 앞선 부분 실행을 중복 집계하지 않았다. 네 history 모두 epoch1~30 연속성과 epoch15/30 행의 존재를 확인했다. 추정·보간·checkpoint 역직렬화는 수행하지 않았다.
+
+[확실] 계산에는 history의 원래 float precision을 사용했다. Metric은 %로 소수 둘째 자리, loss는 소수 여섯째 자리로 표시했다. Std는 population std(ddof=0)이며 std 단위는 %p다. 표의 표시값을 다시 빼서 delta를 계산하지 않았다.
+
+### Fold-level epoch15 versus epoch30
+
+| Fold | Epoch | Accuracy (%) | Precision (%) | Recall (%) | F1 (%) | Train Loss | Test Loss |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 15 diagnostic | 78.61 | 77.37 | 77.05 | 77.21 | 0.194189 | 0.619931 |
+| 1 | 30 official | 78.23 | 76.73 | 77.05 | 76.89 | 0.012044 | 0.900131 |
+| 2 | 15 diagnostic | 80.73 | 80.00 | 78.69 | 79.34 | 0.109118 | 0.591543 |
+| 2 | 30 official | 81.12 | 80.17 | 79.51 | 79.84 | 0.012602 | 0.764611 |
+| 3 | 15 diagnostic | 83.24 | 85.84 | 77.05 | 81.21 | 0.091132 | 0.540609 |
+| 3 | 30 official | 83.04 | 84.21 | 78.69 | 81.36 | 0.123243 | 0.648642 |
+| 4 | 15 diagnostic | 83.17 | 81.20 | 83.54 | 82.35 | 0.075964 | 0.508126 |
+| 4 | 30 official | 83.95 | 83.06 | 82.72 | 82.89 | 0.025707 | 0.601602 |
+
+### Paired changes: epoch15 minus epoch30
+
+[확실] Metric 변화는 %p, test loss 변화는 원래 loss 단위다. 음수 test loss delta는 epoch15의 loss가 낮다는 뜻이다.
+
+| Fold | Accuracy delta (%p) | Precision delta (%p) | Recall delta (%p) | F1 delta (%p) | Test Loss delta |
+|---|---:|---:|---:|---:|---:|
+| 1 | +0.39 | +0.63 | 0.00 | **+0.32** | −0.280200 |
+| 2 | −0.39 | −0.17 | −0.82 | **−0.50** | −0.173068 |
+| 3 | +0.19 | +1.63 | −1.64 | **−0.15** | −0.108033 |
+| 4 | −0.77 | −1.86 | +0.82 | **−0.53** | −0.093476 |
+| **Mean delta** | **−0.15** | **+0.06** | **−0.41** | **−0.22** | — |
+
+### Four-fold aggregate and primary comparison
+
+| Duration / role | Accuracy (%) ± std (%p) | Precision (%) ± std (%p) | Recall (%) ± std (%p) | F1 (%) ± std (%p) |
+|---|---:|---:|---:|---:|
+| **Epoch15 — R4 DIAGNOSTIC ONLY** | **81.44 ± 1.92** | **81.10 ± 3.07** | **79.08 ± 2.66** | **80.03 ± 1.95** |
+| **Epoch30 — R2 OFFICIAL** | **81.58 ± 2.19** | **81.04 ± 2.89** | **79.49 ± 2.06** | **80.24 ± 2.22** |
+
+[확실] Primary result의 원래 float 값은 mean F1(15)=0.8002716989713582, mean F1(30)=0.8024238415748962, 차이=(15−30)×100=**−0.2152142603538021%p**, 표시값 **−0.22%p**다. Epoch15가 더 높은 fold는 **1개**, epoch30이 더 높은 fold는 **3개**, 동률은 **0개**다. Shorter duration의 일관된 F1 개선은 관찰되지 않았다.
+
+[확실] Epoch15의 F1 std는1.95%p로 epoch30의2.22%p보다 작다. 그러나 Recall std는2.66%p 대2.06%p, Precision std는3.07%p 대2.89%p로 더 크다. 따라서 variability가 모든 metric에서 개선되었다고 해석하지 않는다.
+
+### Precision/Recall tradeoff
+
+[확실] Mean Precision은 epoch15에서 **+0.06%p**, mean Recall은 **−0.41%p**다. Aggregate 수준에서 미세한 Precision 상승과 Recall 감소가 동반되었고 F1 mean도 낮아졌다. Fold3는 Precision 상승/Recall 감소, Fold4는 반대 tradeoff를 보여 모든 fold가 같은 방향으로 변하지 않았다.
+
+### Loss behavior
+
+[확실] Epoch15 test loss는 네 fold 모두 epoch30보다 낮다. 이는 기존 R2 분석에서 마지막10 epoch 평균 test loss가 초반10보다 높은 관찰과 방향이 일치한다.
+
+| Fold | Early10 mean Test Loss | Last10 mean Test Loss |
+|---|---:|---:|
+| 1 | 0.5113 | 0.8366 |
+| 2 | 0.4853 | 0.7256 |
+| 3 | 0.4723 | 0.7206 |
+| 4 | 0.4234 | 0.5685 |
+
+[확실] Fold1/2/4의 train loss는 epoch30에서 더 낮지만 Fold3는 반대로 epoch15보다 epoch30에서 높다. 모든 fold에 대해 train loss 단조 감소를 주장하지 않는다. Test loss의 일관된 하락은 F1의 일관된 개선과 동일하지 않다.
+
+[추측] 이 loss 패턴은 possible late-stage overfitting/degradation의 후속 해석 근거다. 다만 calibration이나 오류별 confidence를 별도로 분석하지 않았으므로 loss/F1 차이의 원인을 확정하지 않는다.
+
+### Methodological limitation and decision
+
+[확실] **Classification: B — MIXED / INCONCLUSIVE.** Primary F1 mean은 낮아지고3/4 fold에서 epoch30이 더 높으므로 shorter duration의 일관된 diagnostic benefit은 없다. 반면 모든 fold의 test loss가 낮고 F1 std도 작아 secondary diagnostic benefit은 존재한다. 이 상충 때문에 A의 일관 개선이나 모든 지표에서 이점이 전혀 없다는 결론으로 일반화하지 않는다. 임의 threshold나 유의성 기준을 추가하지 않았다.
+
+[확실] 이미 held-out test history를 본 뒤 수행한 분석이며 independent validation이 아니다. Fold3/4 resume과 CUDA warn_only의 한계도 유지한다. Epoch15는 새로운 official result/model, 자동 교체할 R2 reference 또는 optimal duration이 아니다. Epoch30 official 결과는 그대로 유지한다.
+
+[확실] **R4를 diagnostic으로 종료할 것을 권고한다.** Same-seed fixed15의 새4-fold 학습은 약70~75시간의 장비 점유가 예상되지만, test 노출 문제를 제거하지 못하고 현재 primary 비교에서도 이점을 보이지 않았다. 새 모델 확보나 별도 재현성 질문이 없는 현재 목적에서는 추가 학습을 권장하지 않는다. 이 시간은 기존 Expected Compute의 추정이며 새 측정 결과가 아니다.
+
+[확실] **Stage2 종료를 검토하고 Stage3 Context Improvement 설계로 이동할 것을 권고한다.** 이는 종료 결정의 지원 자료이며 이번 작업에서 Stage2 종료를 확정하거나 다른 문서 상태를 바꾸지 않는다. R3는 OPTIONAL, R5는 DEFER를 유지하고 후보를 즉석 확장하지 않는다. Stage3 구현은 NOT STARTED다.
+
+[확실] 변경 범위는 이 문서 하나다. Training/config/model/trainer/기존 output과 README/refinement/development history는 수정하지 않았다.
