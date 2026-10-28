@@ -32,16 +32,19 @@ SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구
 - `R2 OFFICIAL F1: 80.24% ± 2.22%p / R2−R0 +2.30%p / R2−R1 +3.33%p`
 - `R3: OPTIONAL / NOT RUN; R5: DEFER / NOT RUN`
 - `R4: DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED`
-- `NEXT: USER-RUN S3-1 CUDA SMOKE / FOLD1 AFTER REVIEW`
+- `NEXT: S3-1 FOLD3 / FOLD4 / 4-FOLD COMPARISON`
 - `MLFLOW TRACKING: READY FOR NEW REFINEMENT EXPERIMENTS`
 - `PROPOSED CONTEXT MODEL IMPROVEMENT / STAGE3: IN PROGRESS`
-- `S3-1 TEMPORAL MEAN POOLING: IMPLEMENTED / TRAINING NOT RUN`
+- `S3-1 TEMPORAL MEAN POOLING: IMPLEMENTED / FOLD1 COMPLETED VIA RESUME / FINAL F1 76.83%`
+- `S3-1 FOLD2: COMPLETED VIA RESUME / FINAL F1 77.49%; FOLD3 / FOLD4: NOT RUN`
+- `S3-1: INTERIM / 2 OF 4 FOLDS COMPLETED / PRECISION UP, RECALL DOWN IN BOTH COMPLETED FOLDS`
+- `S3-1 OFFICIAL 4-FOLD AGGREGATE: NOT AVAILABLE`
 
 ## Paper Reconstruction Baseline
 
 [확실] R2 epoch30 official 4-fold mean은 Accuracy **81.58% ± 2.19%p**, Precision **81.04% ± 2.89%p**, Recall **79.49% ± 2.06%p**, F1 **80.24% ± 2.22%p**입니다. Std는 population std(ddof=0)입니다. 상세 비교·진단·실패 이력은 [refinement](docs/paper_reconstruction/reconstruction_refinement.md)와 [development history](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
 
-[확실] Fold3/4는 중단 후 resume을 포함해 완료했습니다. Fold4는 final metric/model/artifact 저장을 확인했지만 종료 시 cp949 이모지 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. R4 diagnostic 후 Stage2를 종료했고 [S3-1 Temporal Mean Pooling](docs/context_model/stage3_context_improvement_plan.md)은 IMPLEMENTED / TRAINING NOT RUN입니다. Behavior/Fusion은 NOT STARTED입니다.
+[확실] R2 Fold3/4는 resume을 포함해 완료했고 R2 Fold4는 저장 후 cp949 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. Stage2는 COMPLETED, Stage3는 IN PROGRESS이며 [S3-1 중간 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-interim-results--24-folds)는 Fold1·2 모두 resume으로 완료한 2/4-fold 관찰입니다. Final F1은 각각 76.83% / 77.49%이며 두 fold에서 Precision 증가·Recall 감소가 관찰됐습니다. 4-fold mean/std 전에는 우열을 결론내리지 않습니다. Behavior/Fusion은 NOT STARTED입니다.
 
 ### Goal
 
