@@ -1,213 +1,155 @@
-# CNN-LSTM Drowsiness Fusion
+# Driver Drowsiness Detection — CNN-LSTM Context & Behavior Fusion
 
-SUST-DDD의 VGG19/VGG16+LSTM baseline을 paper-informed reconstruction으로 구현하고, reconstruction refinement를 거쳐 Context Model Improvement, 행동 규칙, fusion detection으로 확장하는 프로젝트입니다.
+[확실] **Context model research: IN PROGRESS · Behavior/Fusion: PLANNED / NOT STARTED**
 
-## 현재 상태
+[확실] 실제 운전 영상 데이터셋 논문 **SUST-DDD: A Real-Drive Dataset for Driver Drowsiness Detection**를 바탕으로 VGG19 CNN + LSTM Context 모델을 재구성하는 연구 프로젝트입니다. 공개되지 않은 학습 조건을 명시하고 feature extraction 위치와 CNN fine-tuning 정책을 단계적으로 검토했습니다. 현재는 Context 모델의 temporal readout을 비교하며, 이후 EAR / MAR / Head Pose 행동 신호와 결합하는 Fusion Detection으로 확장할 계획입니다. 기존 Early Drowsiness Detection 논문 재현 경험에서 출발한 후속 연구입니다(이전 프로젝트 내용은 사용자 설명 기준).
 
-- `DATA PREPARATION: COMPLETED`
-- `VGG19 / VGG16 FEATURE EXTRACTION: COMPLETED`
-- `VGG19 / VGG16 4-FOLD TRAINING: COMPLETED`
-- `INITIAL PAPER-INFORMED BASELINE: COMPLETED`
-- `VGG19 BASELINE F1: 77.94%`
-- `VGG16 BASELINE F1: 77.72%`
-- `BEST-EPOCH ANALYSIS: POST-HOC DIAGNOSTIC ONLY`
-- `VALIDATION: NOT USED`
-- `EARLY STOPPING: NOT USED`
-- `BEST CHECKPOINT SELECTION: NOT USED`
-- `OFFICIAL RESULT: FIXED EPOCH / FINAL EPOCH`
-- `RECONSTRUCTION REFINEMENT / STAGE2: COMPLETED`
-- `R1 VGG19 FC2: COMPLETED`
-- `R1 FEATURE CACHE / 4-FOLD TRAINING: COMPLETED`
-- `R1 OFFICIAL F1: 76.91%`
-- `REFERENCE FEATURE POINT: FC1 (OFFICIAL F1 77.94%)`
-- `R2 VGG19 LAST-BLOCK FINE-TUNING: COMPLETED / 4 OF 4 FOLDS`
-- `R2 PREVIOUS FOLD1: INTERRUPTED AT EPOCH 25 / NO CHECKPOINT / NOT OFFICIAL`
-- `R2 EXECUTION: CUDA REQUIRED / WORKERS=4 / PREFETCH=1 / CHECKPOINT-RESUME ENABLED`
-- `R2 PROFILING: COMPLETED / DATALOADER EXECUTION SETTING SELECTED`
-- `R2 OFFICIAL FOLD1: EPOCH30 COMPLETED / FINAL F1 76.89%`
-- `R2 OFFICIAL FOLD2: EPOCH30 COMPLETED / FINAL F1 79.84%`
-- `R2 OFFICIAL FOLD3 / FOLD4: EPOCH30 COMPLETED / FINAL F1 81.36% / 82.89%`
-- `R2 WORKERS=4 / PREFETCH=1: 4-FOLD FULL-RUN VALIDATED (INCLUDING RESUME)`
-- `R2 OFFICIAL AGGREGATE / INTERPRETATION: COMPLETED`
-- `R2 OFFICIAL F1: 80.24% ± 2.22%p / R2−R0 +2.30%p / R2−R1 +3.33%p`
-- `R3: OPTIONAL / NOT RUN; R5: DEFER / NOT RUN`
-- `R4: DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED`
-- `NEXT: S3-1 FOLD3 / FOLD4 / 4-FOLD COMPARISON`
-- `MLFLOW TRACKING: READY FOR NEW REFINEMENT EXPERIMENTS`
-- `PROPOSED CONTEXT MODEL IMPROVEMENT / STAGE3: IN PROGRESS`
-- `S3-1 TEMPORAL MEAN POOLING: IMPLEMENTED / FOLD1 COMPLETED VIA RESUME / FINAL F1 76.83%`
-- `S3-1 FOLD2: COMPLETED VIA RESUME / FINAL F1 77.49%; FOLD3 / FOLD4: NOT RUN`
-- `S3-1: INTERIM / 2 OF 4 FOLDS COMPLETED / PRECISION UP, RECALL DOWN IN BOTH COMPLETED FOLDS`
-- `S3-1 OFFICIAL 4-FOLD AGGREGATE: NOT AVAILABLE`
+[확실] **핵심 결과:** R2 Block5 fine-tuning은 R0 대비 **F1 +2.30%p, Recall +4.21%p**를 기록했습니다. Stage2는 COMPLETED이고, Stage3 S3-1은 **2/4 folds 완료 — INTERIM**입니다.
 
-## Paper Reconstruction Baseline
+## From Reproduction to Extension
 
-[확실] R2 epoch30 official 4-fold mean은 Accuracy **81.58% ± 2.19%p**, Precision **81.04% ± 2.89%p**, Recall **79.49% ± 2.06%p**, F1 **80.24% ± 2.22%p**입니다. Std는 population std(ddof=0)입니다. 상세 비교·진단·실패 이력은 [refinement](docs/paper_reconstruction/reconstruction_refinement.md)와 [development history](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
+[확실] 기존 `early-drowsiness-repro` 프로젝트의 blink/EAR temporal feature와 HM-LSTM 기반 조기 졸음 분석 경험을 연구의 출발점으로 삼았습니다(사용자 설명 기준). 이번 프로젝트는 별도 SUST-DDD 논문을 대상으로 운전 영상의 Context를 CNN으로 표현하고 LSTM으로 시간 정보를 모델링합니다. 두 프로젝트를 같은 논문·방법의 구현으로 취급하지 않습니다.
 
-[확실] R2 Fold3/4는 resume을 포함해 완료했고 R2 Fold4는 저장 후 cp949 출력 오류로 MLflow terminal status만 RUNNING에 남아 있습니다. 원논문 성능 gap 해결이나 policy 복원을 주장하지 않습니다. Stage2는 COMPLETED, Stage3는 IN PROGRESS이며 [S3-1 중간 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-interim-results--24-folds)는 Fold1·2 모두 resume으로 완료한 2/4-fold 관찰입니다. Final F1은 각각 76.83% / 77.49%이며 두 fold에서 Precision 증가·Recall 감소가 관찰됐습니다. 4-fold mean/std 전에는 우열을 결론내리지 않습니다. Behavior/Fusion은 NOT STARTED입니다.
+[확실] 연구 흐름은 **논문 분석 → 데이터 검증 → R0 재구성 → R1 feature point → R2 CNN adaptation·실행 안정화 → R4 duration diagnostic → Stage2 종료 → Stage3 Context improvement**입니다. 상세 과정은 [개발 이력](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 기록했습니다.
 
-### Goal
+## Research Motivation & Pipeline
 
-원논문에서 직접 확인되는 조건, Figure와 parameter count로부터 구조적으로 역산되는 조건, 공개되지 않아 이번 구현에서 선택한 가정을 분리해 재구성합니다. 이 구현을 원논문과 완전히 동일한 실험이라고 주장하지 않습니다.
+[확실] 연구 목표는 한 프레임의 눈 감김 판정을 넘어 영상의 시간 흐름과 명시적인 행동 신호를 함께 다루는 것입니다. Context는 영상 sequence 분류, Behavior는 눈·입·머리 움직임의 event 검출, Fusion은 두 출력의 결합을 담당하도록 계획합니다. Behavior/Fusion의 효과는 아직 미검증입니다.
 
-### A. PAPER-REPORTED
-
-원논문에서 직접 확인되는 조건입니다.
-
-- Dataset: SUST-DDD, 2,074 videos
-- Class distribution: drowsy 975 / not drowsy 1,099
-- Video unit: 10 sec
-- Input: 224×224×3, video당 20 frames
-- Evaluation: 75% training / 25% test, k-fold cross-validation, k=4
-- CNN backbones: VGG16, VGG19, AlexNet, VGGFaceNet
-- CNN에서 ReLU activation과 2×2 pooling 사용
-- 1 LSTM layer, 2 fully connected layers, ReLU/Sigmoid activation, final Softmax
-
-이 가운데 VGG19를 primary, VGG16을 comparison baseline으로 선택한 것은 현재 reconstruction의 실험 범위다.
-
-원논문 Table III:
-
-| Model | Accuracy | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|
-| VGG19 + LSTM | 90.53% | 91.74% | 91.28% | 91.50% |
-| VGG16 + LSTM | 89.39% | 91.81% | 89.09% | 90.42% |
-
-VGG19 F1은 본문 일부에서 91.46%, Table III에서 91.50%로 서로 다릅니다. 이 프로젝트는 Table III의 91.50%를 reference 주값으로 사용합니다.
-
-### B. STRUCTURALLY INFERRED
-
-4096D는 실험적으로 선택한 feature dimension이 아닙니다. Fig.1의 LSTM parameter count로부터 구조적으로 역산했습니다.
-
-```text
-LSTM parameters = 4 × hidden_size × (input_size + hidden_size + 1)
-9,439,232 = 4 × 512 × (input_size + 512 + 1)
-input_size = 4,096
+```mermaid
+flowchart TD
+    V[Driving video] --> S[20-frame sampling · Implemented]
+    S --> C[VGG19 CNN · Implemented]
+    C --> F[4096-D frame features]
+    F --> L[LSTM512 temporal modeling · Implemented]
+    L --> R[Final hidden R2 / Temporal mean S3-1]
+    R --> P[Context prediction · Implemented]
+    V -.-> B[EAR / MAR / Head Pose · Planned]
+    B -.-> E[Behavior events · Planned]
+    P -.-> U[Context + Behavior Fusion · Planned]
+    E -.-> U
+    U -.-> D[Drowsiness prediction · Planned]
 ```
 
-> The 4096-dimensional LSTM input was structurally inferred from the parameter count shown in Fig.1.
+[확실] 실선은 구현된 Context 경로, 점선은 향후 경로입니다. Context 구현은 완료했지만 개선 실험은 진행 중입니다. 현재 입력은 영상 전체에서 균일 추출한20 frames로, offline clip 분류 결과를 실시간 조기 경보 성능으로 해석하지 않습니다.
 
-구현 대상 구조와 parameter count:
+## Current Status
 
-| Component | Shape | Parameters |
-|---|---|---:|
-| Single-bias LSTM | 4096 → 512 | 9,439,232 |
-| Dense 1 | 512 → 512 | 262,656 |
-| Dense 2 | 512 → 64 | 32,832 |
-| Output | 64 → 2 | 130 |
-| Total | LSTM + dense classifier | 9,734,850 |
+[확실] **2026-10-28 기준** 상태입니다. 완료는 각 단계의 명시된 범위에 대한 표현입니다.
 
-따라서 baseline 구조는 20×4096 input, hidden size 512, one LSTM layer, Dense 512→64→2로 고정했습니다.
+| Stage / work | Status |
+|---|---|
+| Stage1 — Paper-informed reconstruction / R0 VGG19·VGG16 | COMPLETED |
+| Stage2 — Reconstruction refinement / R1·R2·R4 diagnostic | COMPLETED |
+| Stage3 — Proposed Context Model Improvement / S3-1 | IN PROGRESS · 2 OF 4 FOLDS COMPLETED |
+| S3-1 Fold1 / Fold2 | COMPLETED VIA RESUME / COMPLETED VIA RESUME |
+| S3-1 Fold3 / Fold4 | NOT RUN / NOT RUN |
+| S3-1 official 4-fold aggregate | NOT AVAILABLE |
+| Behavior Detection — EAR / MAR / Head Pose | PLANNED / NOT STARTED |
+| Context + Behavior Fusion | PLANNED / NOT STARTED |
 
-### C. RECONSTRUCTION ASSUMPTIONS
+## Paper-informed Reconstruction
 
-다음 조건은 원논문에 충분히 공개되지 않아 이번 baseline에서 명시적으로 선택했습니다.
+[확실] 저장소의 [논문 근거 정리](docs/paper_reconstruction/baseline_spec.md)는 세 범주를 구분합니다.
 
-#### Data / Sampling
+- [확실] **Paper-reported:** 실제 운전 영상2,074개(drowsy975 / not drowsy1,099), 10초 clips, 224×224×3 입력, video당20 frames, CNN + one LSTM layer, two FC layers와 final Softmax, VGG16/VGG19 등의 비교, 75/25 train/test와4-fold CV.
+- [확실] **Structurally inferred:** Figure의 layer dimension과 parameter count로부터 LSTM input4096D / hidden512 구조를 재구성했습니다. Single-bias LSTM의 `4 × 512 × (4096 + 512 + 1) = 9,439,232`에 맞춰 custom LSTM을 구현했습니다.
+- [확실] **Project-defined conditions:** 균일 frame sampling, ImageNet pretraining/normalization, FC1 after ReLU, freeze/fine-tuning 정책, Adam/LR/batch16/fixed30 epochs/seed42 등을 별도로 명시했습니다.
 
-- Label-stratified 4-fold, seed 42, subject-wise information unavailable
-- 전체 유효 frame 범위에서 deterministic uniform 20-frame sampling
-- `np.linspace` 후 `np.rint`; 정확한 `.5`는 ties-to-even
-- Short video는 중복 index를 허용하고 anomaly로 보고
-- 실제 SUST-DDD 결과: short 0, invalid 0, duplicate index 0
-- OpenCV frame load, BGR→RGB, bilinear 224×224 resize
-- ImageNet normalization, data augmentation 없음
+[확실] 논문은 정확한 sampling·feature point·pretrain/freeze 정책, optimizer/LR/batch/epochs, scheduler/early stopping, augmentation/normalization/seed 등 세부 조건을 충분히 공개하지 않았습니다. 따라서 이 구현은 **paper-informed reconstruction**이며 원 실험과의 완전한 동일성은 미검증입니다. 공개된 근거와 프로젝트의 선택을 분리해 기록했습니다.
 
-#### VGG Feature Extraction
+[확실] 원논문 Table III의 VGG19 F1 91.50%는 참고값입니다. 미공개 조건 때문에 프로젝트 결과와 직접 동등 조건 비교에는 제한이 있으며, 수치 차이를 곧바로 구현의 성공·실패로 해석하지 않습니다.
 
-- torchvision ImageNet pretrained VGG16/VGG19
-- Frozen backbone을 offline feature extractor로 사용
-- Backbone별 별도 video-level `[20, 4096]` feature cache
-- 첫 번째 fully connected layer 뒤 ReLU 출력(`fc1`)을 4096D feature로 사용
+## Dataset & Evaluation
 
-원논문은 정확한 VGG feature extraction 위치를 공개하지 않았습니다. 즉, “논문이 fc1을 사용했다”는 의미가 아니라 현재 reconstruction의 선택입니다.
+[확실] SUST-DDD2,074 videos에서 동일한 **label-stratified 4-fold / seed42**, video당20 frames, positive class **drowsy**를 사용합니다. Subject-wise 분할 정보는 미확인이며 subject-independent 일반화를 주장하지 않습니다.
 
-> The paper does not specify the exact VGG feature extraction location. This reconstruction uses the 4096D first fully connected representation after ReLU.
+[확실] Accuracy·Precision·Recall·F1을 보고하되 졸음 누락과 균형을 보기 위해 **Recall과 F1**을 중심으로 해석합니다. Official은 각 fold의 **fixed epoch30 final**이며, aggregate는 **mean ± population std(ddof=0)**입니다. 별도 validation·scheduler·early stopping·best checkpoint selection은 사용하지 않습니다.
 
-#### LSTM Classifier
+[확실] Held-out test의 최고 epoch는 **POST-HOC DIAGNOSTIC ONLY**로 분리하고 official model selection에 사용하지 않았습니다. 다만 동일 test 결과를 관찰하며 후속 실험을 설계하므로 Stage3 비교는 exploratory model development이며 독립적인 확증 평가로 주장하지 않습니다.
+
+## Key Results & Experiment Journey
+
+[확실] 아래는 **완료된 official final-epoch 4-fold** 결과입니다. Mean은 %, std는 %p이며 population std를 사용합니다.
+
+| Condition | Accuracy | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|
+| R0 — Frozen VGG19 FC1 | 79.94 ± 1.77 | 80.88 ± 3.11 | 75.28 ± 1.67 | 77.94 ± 1.65 |
+| R1 — Frozen VGG19 FC2 | 79.51 ± 2.78 | 81.45 ± 2.80 | 73.24 ± 7.05 | 76.91 ± 3.99 |
+| R2 — VGG19 Block5 fine-tuning | **81.58 ± 2.19** | **81.04 ± 2.89** | **79.49 ± 2.06** | **80.24 ± 2.22** |
+
+- [확실] **R0 — 재구성 reference:** Frozen VGG19의 FC1 after ReLU4096D → LSTM512 → Dense head로 출발했습니다. 비교용 VGG16 baseline도4-fold 완료했으며 F1은77.72%입니다.
+- [확실] **R1 — Feature point가 원인인가?** FC1→FC2만 변경한 결과 F1은 R0 대비−1.03%p였습니다. 이 조건에서 feature point 변경의 개선은 관찰되지 않아 FC1 reference를 유지했습니다.
+- [확실] **R2 — CNN adaptation이 도움이 되는가?** Block1~4와 FC1은 frozen으로 두고 Block5를 학습했습니다. R0 대비 Accuracy+1.64%p / Precision+0.17%p / **Recall+4.21%p / F1+2.30%p**였습니다. 이번 비교에서는 feature point 변경보다 representation adaptation이 유리했고, 주된 변화는 Recall 증가였습니다.
+- [확실] **R4 — 더 짧은 학습이 유리한가?** 완료된 R2 history의 공통 epoch15를 진단했습니다. F1은15epoch **80.03% ± 1.95%p**, official30epoch **80.24% ± 2.22%p**, raw 차이 약−0.22%p였습니다. **DIAGNOSTIC ONLY / MIXED / INCONCLUSIVE**로 기록하고 새 fixed15 학습을 권장하지 않았습니다.
+- [확실] **Stage2 종료:** R1·R2와 R4 diagnostic을 정리하고 COMPLETED로 범위를 닫았습니다. R3 optimizer/LR는 OPTIONAL / NOT RUN, R5 preprocessing/sampling은 DEFER / NOT RUN입니다.
+
+### Current Research Question — S3-1 Temporal Mean Pooling
+
+[확실] **Does aggregating all LSTM timestep representations provide a better context representation than using only the final hidden state?** 기존 R2의 마지막 hidden state 대신20 timestep hidden states를 평균내면 동일 CNN/LSTM/head 조건에서 F1과 Precision/Recall 균형이 달라지는지 검토합니다.
+
+[확실] 주요 architecture 차이는 `h20 [B,512]` → `[B,20,512].mean(dim=1)`뿐입니다. Parameter 수는 R2와 동일한 **total132,523,778 / trainable19,174,082 / frozen113,349,696**이며 batch16/AMP=false/fixed30과 기존 연구 조건을 유지합니다.
+
+[확실] **INTERIM — 2/4 folds.** 아래는 완료된 개별 fold의 epoch30 official metric이며4-fold aggregate는 아직 없습니다.
+
+| S3-1 completed fold | Accuracy | Precision | Recall | F1 | ΔF1 vs same R2 fold |
+|---|---:|---:|---:|---:|---:|
+| Fold1 — via resume | 78.61% | 78.30% | 75.41% | 76.83% | −0.06%p |
+| Fold2 — via resume | 79.96% | 82.11% | 73.36% | 77.49% | −2.35%p |
+
+[확실] 두 완료 fold에서 R2 대비 Precision 증가·Recall 감소를 관찰했습니다. **2-fold interim F1 mean은77.16% — INTERIM DIAGNOSTIC ONLY / NOT OFFICIAL AGGREGATE**입니다. Fold3·4 이후4-fold mean/std로 판단하며 현재 관찰을 일반화하거나 S3-1의 최종 우열로 결론내리지 않습니다. Raw metrics·paired delta·post-hoc best epoch·resume 이력은 [Stage3 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-interim-results--24-folds)에 있습니다.
+
+## Problem Solving & Engineering
+
+- [확실] **불완전한 논문 명세 → 근거 분류:** Paper-reported / structurally inferred / project-defined 조건을 분리하고 parameter count로4096D 입력과 single-bias LSTM을 검증했습니다.
+- [확실] **GPU 학습 공급 병목 → profiling:** Workers0의 bounded profile에서 train batch time 중 loading 비중83.12%를 확인해 DataLoader 실행 설정을 조사했습니다. 모델·batch·AMP 조건과 실행 설정 변경을 구분했습니다.
+- [확실] **짧은 profile과 full-run 안정성의 차이:** Workers2는 반복 대기 문제가 있었고 정확 원인은 미확인입니다. Workers8은 short profile 성공 후 full training의 shared-storage 단계에서 Windows1455 오류로 실패했습니다. Workers4/prefetch1은 resume을 포함해 R2 네 fold final 결과를 확보했으며 최적 설정이나 무중단 완주를 뜻하지 않습니다.
+- [확실] **장시간 학습 중단 → epoch checkpoint/resume:** Model·optimizer·epoch·history·Python/NumPy/CPU/CUDA RNG·shuffle generator를 복원하도록 구성했습니다. S3-1도 Fold1 epoch20→21, Fold2 epoch25→26에서 재개해30까지 완료했습니다. 무중단 trajectory와의 bitwise 동일성은 미검증입니다.
+- [확실] **추적 가능한 결과 → MLflow와 로컬 기록:** Condition/fold별 tracking과 history·final metrics·environment를 남겼습니다. R2 Fold4는 final 저장 후 cp949 출력 오류로 MLflow 상태가 RUNNING에 남은 이력을 구분해 보존했습니다.
+- [확실] **비교 해석 통제:** Best test epoch를 official로 선택하지 않고, S3-1은 parameter 수를 유지해 temporal readout 변경을 비교합니다. 상세 실패 이력과 복구 과정은 [개발 이력](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
+
+## Tech Stack
+
+[확실] **Python · PyTorch · Torchvision · OpenCV · NumPy · MLflow · CUDA/cuDNN · PyYAML · pytest**를 사용합니다. 현재 모델은 VGG19/VGG16과 custom single-bias LSTM입니다. EAR/MAR/Head Pose와 Fusion은 향후 구현 대상입니다.
+
+## Repository Structure
+
+[확실] 핵심 구조입니다. Behavior/Fusion 디렉터리는 현재 placeholder이며 구현 완료를 뜻하지 않습니다.
 
 ```text
-[B, 20, 4096]
-→ single-bias LSTM512
-→ final hidden state
-→ Dense512 → ReLU
-→ Dense64 → Sigmoid
-→ Dense2 → logits
+configs/
+  paper_reconstruction/     # R0/R1/R2 실험 조건
+  context_model/            # S3-1 실험 조건
+  behavior/, fusion/        # 향후 branch 설정 placeholder
+docs/
+  paper_reconstruction/     # 논문 근거·데이터·모델·결과·refinement
+  context_model/            # Stage3 계획과 중간 결과
+  PROJECT_DEVELOPMENT_HISTORY.md
+scripts/                   # 데이터 준비·학습·profiling CLI
+src/drowsiness_fusion/     # data / models / training / evaluation 등
+tests/                     # 구조·학습·checkpoint 등 검증
+outputs/                   # 로컬 실험 산출물
+README.md                  # 프로젝트 소개와 문서 허브
 ```
 
-- ReLU와 Sigmoid는 모두 실제로 사용했습니다.
-- 논문은 두 activation의 정확한 적용 위치를 충분히 설명하지 않아 Dense512 뒤 ReLU, Dense64 뒤 Sigmoid로 해석했습니다.
-- Attention, Dropout, BatchNorm은 사용하지 않았습니다.
-- 마지막 LSTM hidden state를 sequence representation으로 사용했습니다.
+## Documentation Index
 
-일반 `torch.nn.LSTM`은 `bias_ih`와 `bias_hh` 두 bias를 사용해 Fig.1보다 parameter가 2,048개 많습니다. 따라서 Fig.1의 `9,439,232`와 맞도록 단일 bias vector를 갖는 custom LSTM을 구현했습니다. Input weight, recurrent weight, bias는 모두 global seed를 따르는 `[-1/√512, +1/√512]` uniform initialization을 사용하고 initial hidden/cell state는 0입니다. 이 initialization이 Keras default와 같다고 가정하지 않습니다.
+[확실] 상세 명세와 실행 정보는 다음 문서에서 확인할 수 있습니다.
 
-논문은 final Softmax를 명시하지만 현재 PyTorch model은 Dense2의 raw logits를 반환합니다. `CrossEntropyLoss`가 내부에서 log-softmax와 negative log likelihood를 처리하므로 training graph에 explicit Softmax를 중복 적용하지 않습니다. Probability가 필요한 inference에서만 Softmax를 적용하며, 이는 논문의 Softmax classification과 기능적으로 대응하는 구현입니다.
+- [Baseline specification](docs/paper_reconstruction/baseline_spec.md) — 논문 근거, 구조 추론, 구현 선택과 known unknowns.
+- [Data preparation](docs/paper_reconstruction/data_preparation.md) — metadata, split, sampling과 전처리 정책.
+- [Model pipeline](docs/paper_reconstruction/model_pipeline.md) — frame→VGG→LSTM 구조와 구현 대응.
+- [Baseline results](docs/paper_reconstruction/results.md) — VGG19/VGG16 official 결과와 post-hoc diagnostic.
+- [Reconstruction refinement](docs/paper_reconstruction/reconstruction_refinement.md) — R0/R1/R2 비교, 실행 설정과 troubleshooting.
+- [R4 duration plan](docs/paper_reconstruction/r4_training_duration_plan.md) — duration 사전 계획과 기존 history 진단.
+- [Stage3 Context improvement](docs/context_model/stage3_context_improvement_plan.md) — 고정 연구 조건, S3-1 설계와2/4-fold 중간 결과.
+- [Project development history](docs/PROJECT_DEVELOPMENT_HISTORY.md) — 개발·실험·실패·resume 흐름 및 주요 실행 명령.
 
-#### Training Hyperparameters
+## Next Steps
 
-| Parameter | Value | Classification |
-|---|---|---|
-| Optimizer | Adam | Reconstruction assumption |
-| Learning rate | 0.0001 | Reconstruction assumption |
-| Weight decay | 0.00001 | Reconstruction assumption |
-| Batch size | 16 | Reconstruction assumption |
-| Epochs | 30 | Reconstruction assumption |
-| Seed | 42 | Reconstruction assumption |
-| Scheduler | None | Reconstruction assumption |
-| Early stopping | None | Reconstruction assumption |
-| Validation split | None | Reconstruction assumption |
-| Loss | CrossEntropyLoss | Reconstruction assumption |
-| Positive class | drowsy | Evaluation policy |
-| Fold count | 4 | Paper-reported |
-| Train/Test ratio | 75/25 | Paper-reported |
+1. [확실] S3-1 Fold3, 이어서 Fold4를 수행합니다.
+2. [확실] 동일 fold의 R2와 비교하고4-fold mean/std·Precision/Recall·비용을 함께 검토합니다.
+3. [확실] S3-1 결과에 근거해 추가 Context architecture 실험 여부를 결정합니다. Attention/BiLSTM/Bottleneck은 현재 미구현 후보입니다.
+4. [확실] Behavior branch와 Context + Behavior Fusion을 별도로 설계합니다. Event 정의·평가·timestamp 정렬·결합 규칙은 향후 검증 대상입니다.
 
-Optimizer, learning rate, weight decay, batch size, epoch 수는 원논문에서 확인되지 않습니다.
-
-#### Evaluation Policy
-
-- 각 fold의 약 75%를 train, 약 25%를 training에서 제외된 held-out test fold로 해석
-- 현재 reconstruction에는 별도 validation split 없음
-- Fixed 30 epochs, epoch 30 final metric을 official result로 사용
-- Early stopping과 best checkpoint selection 없음
-- 4-fold mean과 population std(`ddof=0`) 사용
-- Drowsy를 positive class로 평가
-
-원논문은 validation 사용 여부, epoch selection, early stopping, checkpoint selection, test evaluation frequency와 fold aggregation 방식을 공개하지 않았습니다. 위 정책은 원논문의 정책에 대한 주장이 아니라 이번 reconstruction의 선택입니다.
-
-### Baseline Results
-
-Official final-epoch 4-fold mean:
-
-| Model | Accuracy | Precision | Recall | F1 |
-|---|---:|---:|---:|---:|
-| VGG19 + LSTM | 79.94% | 80.88% | 75.28% | 77.94% |
-| VGG16 + LSTM | 80.04% | 81.90% | 74.15% | 77.72% |
-
-VGG16은 Accuracy/Precision이, VGG19는 Recall/F1이 소폭 높지만 차이는 작습니다. 특정 backbone의 명확한 우위를 주장하지 않습니다. 원논문과의 상세 비교는 [results.md](docs/paper_reconstruction/results.md)에 있습니다.
-
-### Known Unknowns / Limitations
-
-원논문에서 공개되지 않은 조건과 이번 선택의 전체 대응표는 [baseline_spec.md](docs/paper_reconstruction/baseline_spec.md#known-unknowns)에 정리했습니다. 핵심 unknown은 pretrained/freeze 정책, FC feature 위치, sampling/preprocessing, optimizer와 hyperparameter, validation/epoch/checkpoint selection, initialization, fold 생성 및 aggregation 방식입니다.
-
-### Post-hoc Diagnostic Analysis
-
-History에서 held-out test F1이 가장 높은 epoch를 사후 분석했습니다.
-
-- VGG19: fold별 epoch `4 / 9 / 25 / 26`
-- VGG16: fold별 epoch `28 / 22 / 5 / 7`
-
-Held-out test fold를 기준으로 epoch를 선택하면 test가 validation 역할을 하므로 이 값은 `POST-HOC DIAGNOSTIC ONLY`이며 official metric이 아닙니다. 상세 수치는 [results.md](docs/paper_reconstruction/results.md#6-post-hoc-best-epoch-diagnostic)에 있습니다.
-
-## 문서 안내
-
-- [baseline_spec.md](docs/paper_reconstruction/baseline_spec.md): 세 분류와 상세 구현 명세, Known Unknowns
-- [data_preparation.md](docs/paper_reconstruction/data_preparation.md): metadata, split, sampling 정책
-- [model_pipeline.md](docs/paper_reconstruction/model_pipeline.md): frame→VGG→LSTM pipeline
-- [results.md](docs/paper_reconstruction/results.md): official 결과와 diagnostic 분석
-- [reconstruction_refinement.md](docs/paper_reconstruction/reconstruction_refinement.md): 미공개 조건의 sensitivity analysis와 R0–R5 실험 계획
-
-## 다음 단계
-
-Proposed Context Model Improvement에 앞서 Paper Reconstruction Refinement를 진행합니다. 원논문 핵심 구조와 기존 4-fold 75/25 train/test, fixed-epoch 평가 정책을 유지하면서 feature extraction 위치, CNN training policy, optimizer/learning rate, training duration과 preprocessing/sampling의 민감도를 제한적으로 검토합니다.
-
-상세 계획은 [reconstruction_refinement.md](docs/paper_reconstruction/reconstruction_refinement.md)에 있습니다.
+[확실] 이 프로젝트는 논문 기반 baseline 재구성에서 출발해, 실험 근거에 따라 Context architecture를 검토하고 영상 Context와 명시적 행동 신호를 결합하는 Fusion Detection까지 확장하는 과정입니다. 현재는 **Context model improvement** 단계이며 Behavior/Fusion은 계획 상태입니다.
