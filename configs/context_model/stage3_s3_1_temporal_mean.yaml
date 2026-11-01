@@ -62,7 +62,7 @@ training:
 
 mlflow:
   enabled: true
-  tracking_uri: "http://127.0.0.1:5000"
+  tracking_uri: "http://127.0.0.1:5001"
   experiment_name: "context-model-improvement"
   parent_run_name: "S3_1_temporal_mean"
 

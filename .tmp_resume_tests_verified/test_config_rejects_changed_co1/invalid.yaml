@@ -1,0 +1,67 @@
+classifier:
+  activation_1: relu
+  activation_2: sigmoid
+  hidden_1: 512
+  hidden_2: 64
+  num_classes: 2
+cnn:
+  backbone: vgg19
+  cnn_training_policy: last_block_finetune
+  fc1_trainable: false
+  feature_dim: 4096
+  feature_point: fc1
+  frozen_blocks:
+  - 1
+  - 2
+  - 3
+  - 4
+  input_size:
+  - 224
+  - 224
+  normalization: imagenet
+  pretrained: true
+  trainable_blocks:
+  - 5
+cross_validation:
+  folds: 4
+  seed: 42
+data:
+  sequence_metadata: data/sequences/paper_reconstruction_20frame.csv
+  split_root: data/splits/paper_reconstruction
+experiment:
+  condition_id: S3_1_temporal_mean
+  result_role: official
+  stage: context_model_improvement
+lstm:
+  batch_first: true
+  hidden_size: 512
+  input_size: 4096
+  num_layers: 1
+mlflow:
+  enabled: true
+  experiment_name: context-model-improvement
+  parent_run_name: S3_1_temporal_mean
+  tracking_uri: http://127.0.0.1:5001
+output:
+  root: outputs/context_model/S3_1_temporal_mean
+sequence:
+  length: 20
+temporal_readout: mean
+training:
+  amp: true
+  batch_size: 16
+  checkpoint_selection: final_epoch
+  cnn_learning_rate: 1.0e-05
+  device: cuda
+  early_stopping: false
+  epochs: 30
+  num_workers: 4
+  optimizer: adam
+  persistent_workers: true
+  pin_memory: true
+  prefetch_factor: 1
+  scheduler: none
+  seed: 42
+  temporal_learning_rate: 0.0001
+  validation: none
+  weight_decay: 1.0e-05

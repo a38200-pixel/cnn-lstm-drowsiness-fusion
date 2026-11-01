@@ -56,13 +56,23 @@ def save_checkpoint(path, model, optimizer, epoch, config, fold, history, genera
     os.replace(temporary, path)
 
 
+def _resume_config(config):
+    """Tracking server location can change without changing the experiment."""
+    normalized = config_with_effective_loader_settings(config)
+    if "mlflow" in normalized:
+        normalized["mlflow"] = {
+            key: value for key, value in normalized["mlflow"].items()
+            if key != "tracking_uri"
+        }
+    return normalized
+
+
 def load_checkpoint(path, model, optimizer, config, fold, generator):
     # Only load user-selected, trusted local checkpoints (contains Python/NumPy RNG objects).
     state = torch.load(path, map_location="cpu", weights_only=False)
     condition_id = config.get("experiment", {}).get("condition_id", "R2")
     if (state["condition_id"] != condition_id or state["fold"] != fold
-            or config_with_effective_loader_settings(state["config"])
-            != config_with_effective_loader_settings(config)):
+            or _resume_config(state["config"]) != _resume_config(config)):
         raise ValueError("Resume checkpoint fold/config/condition does not match this experiment.")
     epoch = int(state["epoch"])
     if not 1 <= epoch <= int(config["training"]["epochs"]):

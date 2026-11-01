@@ -115,3 +115,29 @@ def test_checkpoint_resume_optimizer_rng_and_next_update(tmp_path, monkeypatch):
                for actual, expected in zip(restored.parameters(), expected_weights))
     with pytest.raises(ValueError, match="does not match"):
         load_checkpoint(path, restored, restored_optimizer, config, 2, generator)
+
+
+def test_resume_allows_tracking_uri_change_only(tmp_path, monkeypatch):
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+    model = nn.Linear(2, 1)
+    optimizer = Adam(model.parameters())
+    generator = torch.Generator().manual_seed(42)
+    config = {
+        "training": {"epochs": 30, "batch_size": 16},
+        "mlflow": {"tracking_uri": "http://127.0.0.1:5000", "experiment_name": "stage3"},
+    }
+    original = copy.deepcopy(config)
+    path = tmp_path / "last_checkpoint.pt"
+    save_checkpoint(path, model, optimizer, 10, config, 3, [{"epoch": i} for i in range(1, 11)], generator)
+    resumed = copy.deepcopy(config)
+    resumed["mlflow"]["tracking_uri"] = "http://127.0.0.1:5001"
+    start, _ = load_checkpoint(path, model, optimizer, resumed, 3, generator)
+    assert start == 11
+    assert config == original
+    assert resumed["mlflow"]["tracking_uri"] == "http://127.0.0.1:5001"
+    for section, key, value in [("training", "batch_size", 8),
+                                ("mlflow", "experiment_name", "different")]:
+        changed = copy.deepcopy(resumed)
+        changed[section][key] = value
+        with pytest.raises(ValueError, match="does not match"):
+            load_checkpoint(path, model, optimizer, changed, 3, generator)
