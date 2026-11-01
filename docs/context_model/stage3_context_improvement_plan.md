@@ -1,6 +1,6 @@
 # Stage 3 — Proposed Context Model Improvement
 
-[확실] 갱신일: 2026-10-28 KST. **S3-1 IN PROGRESS / INTERIM / 2 OF 4 FOLDS COMPLETED**. Fold1·2는 COMPLETED VIA RESUME, Fold3·4는 NOT RUN이다. Stage2는 COMPLETED, Stage3는 IN PROGRESS다. 15절은 날짜가 있는 Fold1 과거 기록이며 최신 결과는 아래 S3-1 Interim Results에 기록한다. 4-fold aggregate는 NOT AVAILABLE, NEXT는 Fold3다.
+[확실] 갱신일: 2026-11-01 KST. **S3-1 IN PROGRESS / INTERIM / 3 OF 4 FOLDS COMPLETED**. Fold1·2·3은 COMPLETED VIA RESUME, Fold4는 NOT RUN이다. Stage2는 COMPLETED, Stage3는 IN PROGRESS다. 15절은 날짜가 있는 Fold1 과거 기록이며 최신 결과는 아래 S3-1 Interim Results에 기록한다. 4-fold aggregate는 NOT AVAILABLE, NEXT는 Fold4다.
 
 ## 1. Motivation
 
@@ -157,10 +157,10 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 | ID | Scope | Additional training | Gate |
 |---|---|---|---|
 | **S3-0** | Existing R2 reference | **0** | Output/조건/상태 provenance 확인; 새 실행으로 부르지 않음 |
-| **S3-1** | Mean hidden-state pooling only — IMPLEMENTED | **Fold1/2 COMPLETED VIA RESUME; Fold3/4 NOT RUN; 2/4 INTERIM** | 4-fold mean/std 전에는 우열 결정하지 않음 |
+| **S3-1** | Mean hidden-state pooling only — IMPLEMENTED | **Fold1/2/3 COMPLETED VIA RESUME; Fold4 NOT RUN; 3/4 INTERIM** | 4-fold mean/std 전에는 우열 결정하지 않음 |
 | **S3-2** | Conditional second context experiment | **미정** | S3-1이 가치 있을 때만 별도 설계; 후보 조합 자동 실행 금지 |
 
-[확실] **NEXT:** Fold3 → Fold4 → R2와4-fold 비교다. 이번 문서 작업에서는 학습을 실행하거나 기존 프로세스를 변경하지 않았다. R3/R5 재개는 별도 결정이다.
+[확실] **NEXT:** Fold4 → R2와4-fold 비교다. 이번 문서 작업에서는 학습을 실행하거나 기존 프로세스를 변경하지 않았다. R3/R5 재개는 별도 결정이다.
 
 ## 14. Status
 
@@ -175,9 +175,10 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 | S3-0 reference selection | R2 epoch30 official; existing artifacts |
 | S3-1 architecture/config/script | **IMPLEMENTED** |
 | S3-1 Fold1 | **COMPLETED VIA RESUME / epoch30 official F1 76.83%** |
-| S3-1 checkpoint/resume | **VALIDATED for completed Fold1/2** |
+| S3-1 checkpoint/resume | **VALIDATED for completed Fold1/2/3** |
 | S3-1 Fold2 | **COMPLETED VIA RESUME / epoch30 official F1 77.49%** |
-| S3-1 Fold3 / Fold4 | **NOT RUN / NOT RUN** |
+| S3-1 Fold3 | **COMPLETED VIA RESUME / epoch30 official F1 77.29%** |
+| S3-1 Fold4 | **NOT RUN** |
 | S3-1 official aggregate | **NOT AVAILABLE** |
 | Behavior / Fusion | **NOT STARTED / NOT STARTED** |
 
@@ -250,24 +251,24 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 
 [확실] Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 reference COMPLETED / S3-1 implementation COMPLETED / Fold1 COMPLETED VIA RESUME다. Fold2는 위 기록상 RUNNING, Fold3/4는 NOT RUN, S3-1 aggregate는 NOT AVAILABLE이다. **NEXT: Fold2 official completion**이며 단일 fold를 전체 결과로 승격하지 않는다.
 
-## S3-1 Interim Results — 2/4 Folds
+## S3-1 Interim Results — 3/4 Folds
 
-[확실] **2026-10-28 / INTERIM / 2 OF 4 FOLDS COMPLETED.** Condition은 `S3_1_temporal_mean`이다. Fold1·2의 official은 각각 fixed epoch30 final이며 아래 두 fold 평균은 **INTERIM DIAGNOSTIC / NOT OFFICIAL AGGREGATE**다. S3-1은 IN PROGRESS, 4-fold aggregate는 NOT AVAILABLE이다. 위 2026-10-26 snapshot의 Fold2 RUNNING은 과거 상태다.
+[확실] **2026-11-01 / INTERIM / 3 OF 4 FOLDS COMPLETED.** Condition은 `S3_1_temporal_mean`이다. Fold1~3의 official은 각각 fixed epoch30 final이며 아래 세 fold 평균은 **INTERIM DIAGNOSTIC / NOT OFFICIAL AGGREGATE**다. S3-1은 IN PROGRESS, Fold4는 NOT RUN, 4-fold aggregate는 NOT AVAILABLE이다. 위 날짜가 있는 snapshot은 과거 상태다.
 
 ### Official final metrics per completed fold
 
-| Metric | Fold1 raw | Fold2 raw |
-|---|---:|---:|
-| Official epoch | 30 | 30 |
-| Train loss | 0.07830131527791069 | 0.03797693561966205 |
-| Test loss | 0.7655578458067999 | 0.7798838005302499 |
-| Accuracy | 0.7861271676300579 | 0.7996146435452793 |
-| Precision | 0.7829787234042553 | 0.8211009174311926 |
-| Recall | 0.7540983606557377 | 0.7336065573770492 |
-| F1 | 0.7682672233820459 | 0.774891774891775 |
-| Confusion matrix (TN/FP; FN/TP) | `[[224,51],[60,184]]` | `[[236,39],[65,179]]` |
+| Metric | Fold1 raw | Fold2 raw | Fold3 raw |
+|---|---:|---:|---:|
+| Official epoch | 30 | 30 | 30 |
+| Train loss | 0.07830131527791069 | 0.03797693561966205 | 0.06812437050212235 |
+| Test loss | 0.7655578458067999 | 0.7798838005302499 | 0.729267328891451 |
+| Accuracy | 0.7861271676300579 | 0.7996146435452793 | 0.7996146435452793 |
+| Precision | 0.7829787234042553 | 0.8211009174311926 | 0.8271028037383178 |
+| Recall | 0.7540983606557377 | 0.7336065573770492 | 0.7254098360655737 |
+| F1 | 0.7682672233820459 | 0.774891774891775 | 0.7729257641921398 |
+| Confusion matrix (TN/FP; FN/TP) | `[[224,51],[60,184]]` | `[[236,39],[65,179]]` | `[[238,37],[67,177]]` |
 
-[확실] Source는 아래 resume output의 `metrics.json`과 `history.json` 마지막 행이며 제공값과 일치한다. 두 history는 epoch1~30 연속이다. Drowsy가 positive이며 test videos는 각519개다.
+[확실] Source는 아래 resume output의 `metrics.json`과 `history.json` 마지막 행이며 사용자 제공 raw metric과 일치한다. 세 history 모두 epoch1~30 연속이고 원래 history의 이전 metric을 보존한다. Drowsy가 positive이며 test videos는 각519개다. Checkpoint는 역직렬화하지 않고 final model/last checkpoint의 존재를 확인했다.
 
 ### Paired R2 comparison
 
@@ -275,36 +276,43 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 |---|---:|---:|---:|---:|
 | Fold1 R2 | 78.23 | 76.73 | 77.05 | 76.89 |
 | Fold1 S3-1 | 78.61 | 78.30 | 75.41 | 76.83 |
-| Fold1 S3-1−R2 (%p) | +0.39 | +1.56 | −1.64 | −0.06 |
+| Fold1 S3-1−R2 (%p) | +0.39 | +1.56 | -1.64 | -0.06 |
 | Fold2 R2 | 81.12 | 80.17 | 79.51 | 79.84 |
 | Fold2 S3-1 | 79.96 | 82.11 | 73.36 | 77.49 |
-| Fold2 S3-1−R2 (%p) | −1.16 | +1.94 | −6.15 | −2.35 |
+| Fold2 S3-1−R2 (%p) | -1.16 | +1.94 | -6.15 | -2.35 |
+| Fold3 R2 | 83.04 | 84.21 | 78.69 | 81.36 |
+| Fold3 S3-1 | 79.96 | 82.71 | 72.54 | 77.29 |
+| Fold3 S3-1−R2 (%p) | -3.08 | -1.50 | -6.15 | -4.06 |
 
-[확실] Delta는 R2와 S3-1의 raw float 차이에서 계산했다. R2 source는 `outputs/paper_reconstruction/refinement/R2_cuda_fold1_workers4_prefetch1_official/fold_1/metrics.json`과 `outputs/paper_reconstruction/refinement/R2_cuda_fold2_workers4_prefetch1_official/fold_2/metrics.json`이다. 두 완료 fold에서 Precision 증가·Recall 감소 방향의 tradeoff를 관찰했고 final F1 증가는 관찰되지 않았다. Fold1 final F1은 reference와 거의 같다.
+[확실] Delta는 같은 fold의 raw metric 차이로 계산했다. R2 source는 `outputs/paper_reconstruction/refinement/` 아래 다음 세 `metrics.json`이다.
 
-[가능성 높음] 이 관찰만으로 classifier 성향이나 temporal mean의 인과 효과를 확정할 수 없다. 다른 fold로 일반화하거나 S3-1의 개선·실패·열등을 최종 결론내리지 않는다. 최종 판단은4-fold mean/std 이후다.
+- `R2_cuda_fold1_workers4_prefetch1_official/fold_1/metrics.json`
+- `R2_cuda_fold2_workers4_prefetch1_official/fold_2/metrics.json`
+- `R2_cuda_fold3_resume_next/fold_3/metrics.json`
+
+[확실] 세 완료 fold 모두 Recall 감소(−1.64 / −6.15 / −6.15%p)가 반복 관찰됐다. Precision은 Fold1/2에서+1.56 / +1.94%p, Fold3에서−1.50%p로 **mixed**다. 따라서 Precision이 일관되게 증가한다고 해석하지 않는다. Final F1 improvement는 현재 세 완료 fold에서 관찰되지 않았다. Fold1은 R2와 거의 같고 Fold2/3은 각각−2.35 / −4.06%p다. Fold3 raw F1 차이는−4.063356%p로, 표시값끼리 뺀−4.07%p와 구분한다.
 
 ### Interim F1 mean
 
-[확실] **INTERIM DIAGNOSTIC / NOT OFFICIAL AGGREGATE:** Fold1+2만의 S3-1 F1 mean은 **77.157950% (77.16%)**, 동일 R2 두 fold는 **78.363503% (78.36%)**, raw paired mean 차이는 **−1.205553%p (약−1.21%p)**다. 표시용 평균끼리 빼면−1.20%p지만 delta는 raw 값으로 계산한다. 진행 상황 확인용이며4-fold official mean/std를 대신하지 않는다.
+[확실] **INTERIM DIAGNOSTIC / NOT OFFICIAL AGGREGATE:** Fold1~3 S3-1 F1 mean은 **77.202825% (77.20%)**, 동일 R2 세 fold는 **79.360980% (79.36%)**, raw paired mean 차이는 **−2.158154%p (약−2.16%p)**다. 진행 상황 확인용이며4-fold official aggregate를 대신하지 않는다. 3-fold population std를 official result로 제시하지 않는다.
 
 ### Post-hoc diagnostics and loss behavior
 
-| History diagnostic | Fold1 | Fold2 |
-|---|---:|---:|
-| Best test F1 epoch | 16 | 9 |
-| Best test F1 raw | 0.7929687499999999 | 0.7983539094650205 |
-| Best test F1 display | 79.30% | 79.84% |
-| Test loss at that epoch | 0.59973236820831 | 0.4277478552967138 |
-| Final test loss | 0.7655578458067999 | 0.7798838005302499 |
-| Epoch1~10 mean test loss | 0.500581 | 0.461244 |
-| Epoch21~30 mean test loss | 0.757418 | 0.712851 |
+| History diagnostic | Fold1 | Fold2 | Fold3 |
+|---|---:|---:|---:|
+| Best test F1 epoch | 16 | 9 | 19 |
+| Best test F1 raw | 0.7929687499999999 | 0.7983539094650205 | 0.8099173553719008 |
+| Best test F1 display | 79.30% | 79.84% | 80.99% |
+| Test loss at that epoch | 0.59973236820831 | 0.4277478552967138 | 0.5215689234421202 |
+| Final test loss | 0.7655578458067999 | 0.7798838005302499 | 0.729267328891451 |
+| Epoch1~10 mean test loss | 0.500581 | 0.461244 | 0.468320 |
+| Epoch21~30 mean test loss | 0.757418 | 0.712851 | 0.651514 |
 
-[확실] Best epoch와 raw F1은 실제 전체 history에서 확인했다. **POST-HOC DIAGNOSTIC ONLY**이며 official model selection에 사용하지 않는다. Official은 두 fold 모두 epoch30을 유지한다.
+[확실] Best epoch/F1은 세 fold의 실제 전체 history에서 검증했다. Fold3도 epoch19가 true best이며 F1은0.8099173553719008 (80.99%)다. 모두 **POST-HOC DIAGNOSTIC ONLY**이며 official model selection에 사용하지 않는다. Official은 각 fold epoch30을 유지한다.
 
-[확실] 두 완료 fold 모두 후반 평균 test loss가 초반 평균보다 높다. Fold2는 epoch9 test loss0.4277478552967138에서 epoch30 0.7798838005302499로 증가했다. 모든 epoch가 단조 증가했다는 뜻은 아니다.
+[확실] 현재 완료된 세 fold에서 후반 test loss 증가 경향이 관찰된다. 세 fold 모두 마지막10 epoch 평균 test loss가 초반10보다 높다. Fold3는 epoch11 0.47651719518709273 → epoch19 0.5215689234421202 → epoch30 0.729267328891451이다. 모든 epoch에서 단조 증가했다는 뜻은 아니다. Final train/test loss는 위 raw table에 함께 기록한다.
 
-[추측] R2에서 관찰했던 late-stage degradation과 유사한 신호가 있으나 과적합 확정이나 duration 변경 근거로 승격하지 않는다.
+[추측] R2에서 관찰했던 late-stage degradation과 유사한 신호지만 과적합 확정이나 duration 변경 결정으로 해석하지 않는다.
 
 ### Resume provenance and fixed conditions
 
@@ -312,9 +320,20 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 |---|---|---|---|---|
 | 1 | `outputs/context_model/S3_1_temporal_mean_fold1_official/fold_1/last_checkpoint.pt` (epoch20) | `outputs/context_model/S3_1_temporal_mean_fold1_resume_retry_20261023/fold_1/` | start_epoch=21, epoch21~30 | COMPLETED VIA RESUME |
 | 2 | `outputs/context_model/S3_1_temporal_mean_fold2_official/fold_2/last_checkpoint.pt` (epoch25) | `outputs/context_model/S3_1_temporal_mean_fold2_resume_retry_20261027/fold_2/` | start_epoch=26, epoch26~30 | COMPLETED VIA RESUME |
+| 3 | `outputs/context_model/S3_1_temporal_mean_fold3_official/fold_3/last_checkpoint.pt` (epoch10) | `outputs/context_model/S3_1_temporal_mean_fold3_resume_20261030_170320/fold_3/` | start_epoch=11, epoch11~30 | COMPLETED VIA RESUME |
 
-[확실] Fold1은1~20 수행 후 중단, 첫 resume 실패 후 retry21~30 완료 순서다. Fold2는1~25 수행 후 중단, resume26~30 완료 순서다. 원래 history와 resume history의 이전 epoch metric은 일치하며 경계 epoch20/25의 차이는 checkpoint save/total timing 두 필드뿐이다. Resume 완료 output에는 final model과 last checkpoint가 있다. **checkpoint/resume: VALIDATED**로 기록하며 무중단 완주로 표현하지 않는다. Checkpoint 내부 역직렬화 및 무중단 trajectory와 bitwise 동일성은 이번 검증 범위 밖이다.
+[확실] Fold1은1~20 수행 후 중단, 첫 resume 실패 후 retry21~30 완료 순서다. Fold2는1~25 수행 후 중단, resume26~30 완료 순서다. Fold3는1~10 수행 후 중단, epoch10 checkpoint에서 **start_epoch=11**로 재개해11~30을 완료했다. 사용자 실행 로그의 start_epoch=11과 original history10개/final history30개를 대조했다. 이전 metric은 모두 일치하며 경계 epoch의 checkpoint save/total timing 차이는 metric 차이와 구분한다.
 
-[확실] 두 output의 training metadata는 total **132,523,778**, trainable **19,174,082**, frozen **113,349,696**을 기록해 R2와 같다. 유일한 주요 architecture 변경은 R2의 final LSTM hidden 대신 `[B,20,512]` hidden sequence에 `mean(dim=1)`을 적용해 `[B,512]`로 같은 classifier에 입력하는 temporal readout이다. Batch16/AMP=false/seed42, optimizer/LR/fold/preprocessing과 고정30 epoch 정책은 유지한다.
+[확실] Fold3의 이전 재개 시도들은 보존한다. `S3_1_temporal_mean_fold3_resumed_20261029`, `S3_1_temporal_mean_fold3_resume_20261030_164944`, `S3_1_temporal_mean_fold3_resume_20261030_165445`에는 새 history/checkpoint가 없다. 10월30일 첫 시도는 MLflow 포트 변경에 따른 config mismatch, 다음 시도는 epoch11 영상 로딩 중 NumPy 메모리 할당 실패였다(사용자 traceback/대화 기록). 해당 실패의 일부 배치 업데이트는 완료 epoch로 집계하지 않는다. 최종 집계 source는 위170320 output 하나이며 중복 집계하지 않는다.
 
-[확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 IN PROGRESS.** Fold1·2 COMPLETED VIA RESUME, Fold3·4 NOT RUN, 4-fold aggregate NOT AVAILABLE다. **NEXT: Fold3.** 이번 작업은 문서 업데이트 전용이며 학습·모델·trainer·config·기존 output을 변경하지 않았다.
+[확실] 세 resume 완료 output에 final model과 last checkpoint가 있다. **checkpoint/resume: VALIDATED for completed folds**로 기록하며 무중단 완주 또는 무중단 trajectory와 bitwise 동일성은 주장하지 않는다. Checkpoint 내부 역직렬화와 실제 재학습은 이번 문서 검증 범위 밖이다.
+
+[확실] 세 output의 training metadata는 R2와 동일한 total **132,523,778**, trainable **19,174,082**, frozen **113,349,696**을 기록한다. 유일한 주요 architecture 변경은 temporal readout이다. R2는 `20-frame sequence → LSTM → final hidden → classifier head`, S3-1은 `20-frame sequence → LSTM → all hidden states [B,20,512] → mean(dim=1) → [B,512] → same classifier head`다. Batch16/AMP=false/seed42, optimizer/LR/fold/preprocessing과 fixed30 epoch 정책을 유지한다.
+
+### Interpretation, limitations and next step
+
+[확실] **Current interim signal:** Fold1은 R2와 거의 동일한 final F1이고 Fold2/3은 낮았다. Recall 감소는 현재까지 세 완료 fold에서 반복 관찰됐으며 Precision 방향은 mixed다. 단순 temporal mean pooling은 현재까지 R2 final-hidden reference 대비 명확한 improvement signal을 보이지 않았다. 이는 세 완료 fold에 한정된 관찰이다.
+
+[확실] 아직 Fold4가 남아 있으므로 최종 architecture 판단은 **Fold4 이후4-fold mean/std 비교까지 유보**한다. Mean pooling의 일반적인 Recall 감소나 최종 우열·실패를 결론내리지 않는다. 동일 seed 하나/동일 held-out test 재사용과 overlapping training folds, CUDA warn_only 및 resume의 한계를 유지한다. 이 비교는 exploratory model development이며 독립적인 확증 평가나 통계적 유의성을 주장하지 않는다.
+
+[확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 IN PROGRESS.** Fold1·2·3 COMPLETED VIA RESUME, Fold4 NOT RUN, 4-fold aggregate NOT AVAILABLE다. **NEXT: Fold4.** 이번 작업은 문서 업데이트 전용이며 학습·모델·trainer·config·기존 output을 변경하지 않았다.

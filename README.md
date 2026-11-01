@@ -4,7 +4,7 @@
 
 실제 운전 영상 데이터셋 논문 **SUST-DDD: A Real-Drive Dataset for Driver Drowsiness Detection**를 바탕으로 VGG19 CNN + LSTM Context 모델을 재구성하는 연구 프로젝트입니다. 공개되지 않은 학습 조건을 명시하고 feature extraction 위치와 CNN fine-tuning 정책을 단계적으로 검토했습니다. 현재는 Context 모델의 temporal readout을 비교하며, 이후 EAR / MAR / Head Pose 행동 신호와 결합하는 Fusion Detection으로 확장할 계획입니다. 기존 Early Drowsiness Detection 논문 재현 경험에서 출발한 후속 연구입니다(이전 프로젝트 내용은 사용자 설명 기준).
 
-**핵심 결과:** R2 Block5 fine-tuning은 R0 대비 **F1 +2.30%p, Recall +4.21%p**를 기록했습니다. Stage2는 COMPLETED이고, Stage3 S3-1은 **2/4 folds 완료 — INTERIM**입니다.
+**핵심 결과:** R2 Block5 fine-tuning은 R0 대비 **F1 +2.30%p, Recall +4.21%p**를 기록했습니다. Stage2는 COMPLETED이고, Stage3 S3-1은 **3/4 folds 완료 — INTERIM**입니다.
 
 ## From Reproduction to Extension
 
@@ -35,15 +35,15 @@ flowchart TD
 
 ## Current Status
 
-**2026-10-28 기준** 상태입니다. 완료는 각 단계의 명시된 범위에 대한 표현입니다.
+**2026-11-01 기준** 상태입니다. 완료는 각 단계의 명시된 범위에 대한 표현입니다.
 
 | Stage / work | Status |
 |---|---|
 | Stage1 — Paper-informed reconstruction / R0 VGG19·VGG16 | COMPLETED |
 | Stage2 — Reconstruction refinement / R1·R2·R4 diagnostic | COMPLETED |
-| Stage3 — Proposed Context Model Improvement / S3-1 | IN PROGRESS · 2 OF 4 FOLDS COMPLETED |
+| Stage3 — Proposed Context Model Improvement / S3-1 | IN PROGRESS · 3 OF 4 FOLDS COMPLETED |
 | S3-1 Fold1 / Fold2 | COMPLETED VIA RESUME / COMPLETED VIA RESUME |
-| S3-1 Fold3 / Fold4 | NOT RUN / NOT RUN |
+| S3-1 Fold3 / Fold4 | COMPLETED VIA RESUME / NOT RUN |
 | S3-1 official 4-fold aggregate | NOT AVAILABLE |
 | Behavior Detection — EAR / MAR / Head Pose | PLANNED / NOT STARTED |
 | Context + Behavior Fusion | PLANNED / NOT STARTED |
@@ -90,21 +90,22 @@ Held-out test의 최고 epoch는 **POST-HOC DIAGNOSTIC ONLY**로 분리하고 of
 
 주요 architecture 차이는 `h20 [B,512]` → `[B,20,512].mean(dim=1)`뿐입니다. Parameter 수는 R2와 동일한 **total132,523,778 / trainable19,174,082 / frozen113,349,696**이며 batch16/AMP=false/fixed30과 기존 연구 조건을 유지합니다.
 
-**INTERIM — 2/4 folds.** 아래는 완료된 개별 fold의 epoch30 official metric이며4-fold aggregate는 아직 없습니다.
+**INTERIM — 3/4 folds.** 아래는 완료된 개별 fold의 epoch30 official metric이며4-fold aggregate는 아직 없습니다.
 
 | S3-1 completed fold | Accuracy | Precision | Recall | F1 | ΔF1 vs same R2 fold |
 |---|---:|---:|---:|---:|---:|
 | Fold1 — via resume | 78.61% | 78.30% | 75.41% | 76.83% | −0.06%p |
 | Fold2 — via resume | 79.96% | 82.11% | 73.36% | 77.49% | −2.35%p |
+| Fold3 — via resume | 79.96% | 82.71% | 72.54% | 77.29% | −4.06%p |
 
-두 완료 fold에서 R2 대비 Precision 증가·Recall 감소를 관찰했습니다. **2-fold interim F1 mean은77.16% — INTERIM DIAGNOSTIC ONLY / NOT OFFICIAL AGGREGATE**입니다. Fold3·4 이후4-fold mean/std로 판단하며 현재 관찰을 일반화하거나 S3-1의 최종 우열로 결론내리지 않습니다. Raw metrics·paired delta·post-hoc best epoch·resume 이력은 [Stage3 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-interim-results--24-folds)에 있습니다.
+세 완료 fold 모두 R2 대비 Recall 감소가 관찰됐고 final F1 개선은 관찰되지 않았습니다. Precision은 Fold1/2에서 증가했지만 Fold3에서 감소해 방향이 혼재합니다. **3-fold interim F1 mean은77.20% — INTERIM DIAGNOSTIC ONLY / NOT OFFICIAL AGGREGATE**입니다. 동일 R2 Fold1~3은79.36%, raw 평균 차이는−2.16%p입니다. 최종 판단은 Fold4 이후4-fold mean/std로 유보하며 현재 관찰을 일반화하지 않습니다. Raw metrics·paired delta·post-hoc best epoch·resume 이력은 [Stage3 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-interim-results--34-folds)에 있습니다.
 
 ## Problem Solving & Engineering
 
 - **불완전한 논문 명세 → 근거 분류:** Paper-reported / structurally inferred / project-defined 조건을 분리하고 parameter count로4096D 입력과 single-bias LSTM을 검증했습니다.
 - **GPU 학습 공급 병목 → profiling:** Workers0의 bounded profile에서 train batch time 중 loading 비중83.12%를 확인해 DataLoader 실행 설정을 조사했습니다. 모델·batch·AMP 조건과 실행 설정 변경을 구분했습니다.
 - **짧은 profile과 full-run 안정성의 차이:** Workers2는 반복 대기 문제가 있었고 정확 원인은 미확인입니다. Workers8은 short profile 성공 후 full training의 shared-storage 단계에서 Windows1455 오류로 실패했습니다. Workers4/prefetch1은 resume을 포함해 R2 네 fold final 결과를 확보했으며 최적 설정이나 무중단 완주를 뜻하지 않습니다.
-- **장시간 학습 중단 → epoch checkpoint/resume:** Model·optimizer·epoch·history·Python/NumPy/CPU/CUDA RNG·shuffle generator를 복원하도록 구성했습니다. S3-1도 Fold1 epoch20→21, Fold2 epoch25→26에서 재개해30까지 완료했습니다. 무중단 trajectory와의 bitwise 동일성은 미검증입니다.
+- **장시간 학습 중단 → epoch checkpoint/resume:** Model·optimizer·epoch·history·Python/NumPy/CPU/CUDA RNG·shuffle generator를 복원하도록 구성했습니다. S3-1도 Fold1 epoch20→21, Fold2 epoch25→26, Fold3 epoch10→11에서 재개해30까지 완료했습니다. 무중단 trajectory와의 bitwise 동일성은 미검증입니다.
 - **추적 가능한 결과 → MLflow와 로컬 기록:** Condition/fold별 tracking과 history·final metrics·environment를 남겼습니다. R2 Fold4는 final 저장 후 cp949 출력 오류로 MLflow 상태가 RUNNING에 남은 이력을 구분해 보존했습니다.
 - **비교 해석 통제:** Best test epoch를 official로 선택하지 않고, S3-1은 parameter 수를 유지해 temporal readout 변경을 비교합니다. 상세 실패 이력과 복구 과정은 [개발 이력](docs/PROJECT_DEVELOPMENT_HISTORY.md)에 있습니다.
 
@@ -142,12 +143,12 @@ README.md                  # 프로젝트 소개와 문서 허브
 - [Baseline results](docs/paper_reconstruction/results.md) — VGG19/VGG16 official 결과와 post-hoc diagnostic.
 - [Reconstruction refinement](docs/paper_reconstruction/reconstruction_refinement.md) — R0/R1/R2 비교, 실행 설정과 troubleshooting.
 - [R4 duration plan](docs/paper_reconstruction/r4_training_duration_plan.md) — duration 사전 계획과 기존 history 진단.
-- [Stage3 Context improvement](docs/context_model/stage3_context_improvement_plan.md) — 고정 연구 조건, S3-1 설계와2/4-fold 중간 결과.
+- [Stage3 Context improvement](docs/context_model/stage3_context_improvement_plan.md) — 고정 연구 조건, S3-1 설계와3/4-fold 중간 결과.
 - [Project development history](docs/PROJECT_DEVELOPMENT_HISTORY.md) — 개발·실험·실패·resume 흐름 및 주요 실행 명령.
 
 ## Next Steps
 
-1. S3-1 Fold3, 이어서 Fold4를 수행합니다.
+1. S3-1 Fold4를 수행합니다.
 2. 동일 fold의 R2와 비교하고4-fold mean/std·Precision/Recall·비용을 함께 검토합니다.
 3. S3-1 결과에 근거해 추가 Context architecture 실험 여부를 결정합니다. Attention/BiLSTM/Bottleneck은 현재 미구현 후보입니다.
 4. Behavior branch와 Context + Behavior Fusion을 별도로 설계합니다. Event 정의·평가·timestamp 정렬·결합 규칙은 향후 검증 대상입니다.
