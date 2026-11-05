@@ -1,6 +1,6 @@
 # SUST-DDD Drowsiness Detection Project Development History
 
-[확실] **Last updated: 2026-11-01 KST — Stage2 COMPLETED / Stage3 IN PROGRESS / S3-1 INTERIM, 3 OF 4 FOLDS COMPLETED.** R2 official F1은80.24% ± 2.22%p이며 S3-1 Fold1·2·3 final F1은76.83% / 77.49% / 77.29%다. 세 fold 모두 COMPLETED VIA RESUME이고 Fold4는 NOT RUN, 4-fold aggregate는 NOT AVAILABLE이다. 날짜별 과거 snapshot은 보존한다.
+[확실] **Last updated: 2026-11-05 KST — Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED, 4 OF 4 FOLDS COMPLETED VIA RESUME.** S3-1 official F1은77.26% ± 0.26%p, R2는80.24% ± 2.22%p이며 raw mean 차이는−2.98%p다. Official aggregate는 COMPLETED, 결과는 **NO IMPROVEMENT OVER R2 REFERENCE**, S3-2는 NOT DESIGNED / NOT RUN이다. 날짜별 과거 snapshot은 보존한다.
 
 [확실] 이 문서는 프로젝트의 누적 연구·개발·실험·문제 해결 기록이다. 프로젝트는 **exact paper reproduction이 아니라 paper-informed reconstruction**이며, 실험하지 않은 결과를 만들지 않는다. **Official final result와 diagnostic result를 구분**하고, 확인되지 않은 정보는 미확인/미검증 또는 `NOT AVAILABLE`로 표시한다.
 
@@ -23,7 +23,7 @@ SUST-DDD 분석
 → Final Comparison (세부 ablation 설계는 NOT AVAILABLE)
 ```
 
-[확실] Stage1/R0/R1/R2와 R4 diagnostic 후 Stage2는 COMPLETED다. R3 OPTIONAL/NOT RUN, R4 MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN을 유지한다. Stage3는 IN PROGRESS이며 S3-1 Fold1·2·3은 resume으로 완료했다. Fold4는 NOT RUN, NEXT는 Fold4다. Behavior/Fusion은 NOT STARTED다.
+[확실] Stage1/R0/R1/R2와 R4 diagnostic 후 Stage2는 COMPLETED다. R3 OPTIONAL/NOT RUN, R4 MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN을 유지한다. Stage3는 IN PROGRESS이며 S3-1 Fold1~4와 official aggregate는 COMPLETED다. 네 fold 모두 COMPLETED VIA RESUME, 결과는 NO IMPROVEMENT OVER R2 REFERENCE다. NEXT는 다음 Context improvement 설계 검토이며 S3-2는 NOT DESIGNED / NOT RUN이다. Behavior/Fusion은 NOT STARTED다.
 
 # 2. Research Question and Scope
 
@@ -618,7 +618,7 @@ prefetch_factor: 1
 
 1. [확실] Fold1~4 epoch30 official final 수집과 mean/population std 집계, R0/R1/R2 비교 해석은 COMPLETED다.
 2. [확실] R4 고정15/30 diagnostic은 MIXED / INCONCLUSIVE로 마쳤다. F1 delta−0.22%p, epoch15 우위1/4folds여서 새 학습을 권장하지 않고 Stage2를 종료했다.
-3. [확실] NEXT는 Stage3 S3-1 mean hidden-state pooling 설계 검토다. R2 reference와 fixed30을 유지하며 코드/config/training은 별도 작업이다. 이후 Behavior → Fusion → Final Comparison을 계획한다.
+3. [확실] S3-1 mean hidden-state pooling의4-fold 비교는 완료했다. NEXT는 결과를 근거로 다음 Context improvement 설계를 검토하는 것이다. R2 reference를 유지하며 S3-2는 NOT DESIGNED / NOT RUN이다. 이후 Behavior → Fusion → Final Comparison을 계획한다.
 
 [확실] R3 OPTIONAL/NOT RUN, R4 DIAGNOSTIC COMPLETED/MIXED/NO NEW TRAINING RECOMMENDED, R5 DEFER/NOT RUN이다. 미검증 조건을 부정한 것이 아니라 Stage2의 범위를 닫고 Context 설계로 이동한 결정이다.
 
@@ -626,9 +626,9 @@ prefetch_factor: 1
 
 # 16. Planned Context Improvement
 
-[확실] 현재 Stage3는 **IN PROGRESS**, S3-1은 **IMPLEMENTED / FOLD1 COMPLETED VIA RESUME**다. [Stage3 계획](context_model/stage3_context_improvement_plan.md)의 uniform mean pooling으로 기존 R2 reference/fixed30을 유지했다. 다른 후보는 구현하지 않았다.
+[확실] 현재 Stage3는 **IN PROGRESS**, S3-1은 **COMPLETED / 4 OF 4 FOLDS COMPLETED VIA RESUME**다. [Stage3 최종 결과](context_model/stage3_context_improvement_plan.md#s3-1-final-results--44-folds)의 uniform mean pooling은 기존 R2 reference/fixed30을 유지했지만 official F1 77.26% ± 0.26%p로 R2보다2.98%p 낮았다. 판단은 **NO IMPROVEMENT OVER R2 REFERENCE**이며 다른 후보는 구현하지 않았다.
 
-[확실] BiLSTM/Attention/Feature Bottleneck은 DOCUMENTED ONLY다. Mean pooling은 Fold1 official 결과를 확보했지만4-fold aggregate는 NOT AVAILABLE이다.
+[확실] BiLSTM/Attention/Feature Bottleneck은 DOCUMENTED ONLY다. Mean pooling의 official4-fold aggregate는 COMPLETED다. S3-2는 **NOT DESIGNED / NOT RUN**이며 중요한 timestep을 선택·가중할 필요가 있는지를 다음 설계 질문으로 검토한다.
 
 [확실] GRU 등 문서에서 확인되지 않은 후보를 이 계획에 추가하지 않았다. 현재 VGG spatial pooling과 계획된 temporal pooling은 구분한다.
 
@@ -779,10 +779,15 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | 2026-10-30, 사용자 traceback | MLflow 주소 mismatch 수정 후 resume11에서 메모리 할당 실패 | 추가 완료 epoch 없음; 실패 output 보존 |
 | 2026-10-30 생성된 resume output/사용자 실행 이력 | Fold3 start_epoch11 → epoch30 완료 | `S3_1_temporal_mean_fold3_resume_20261030_170320`; COMPLETED VIA RESUME; 정확 종료 일시는 이번에 미조회 |
 | 2026-11-01, interim review | Fold1~3 raw metric·paired delta·전체 history 검증 | 3/4 INTERIM; 다음 Fold4; 4-fold aggregate NOT AVAILABLE |
+| 2026-11-01, 사용자 실행/output | S3-1 Fold4 started | `S3_1_temporal_mean_fold4_official_20261101_165131` |
+| 2026-11-02, 사용자 요청/중단 확인 | Epoch14 checkpoint 보존 후 학습·worker 종료 | MLflow 유지; 다음 resume15 |
+| 2026-11-03 06:07:11 KST, MLflow child 시작 | Fold4 start_epoch15 → epoch30 | Original epoch14 checkpoint 복원 |
+| 2026-11-04 01:03:31 KST, MLflow child/parent 종료 | Fold4 epoch30 완료; S3-1 4/4 COMPLETED VIA RESUME | `S3_1_temporal_mean_fold4_resume_20261103_060647`; FINISHED |
+| 2026-11-05, final aggregate/review | Raw 4-fold mean/std 계산 → R2 comparison | F1−2.98%p; NO IMPROVEMENT OVER R2 REFERENCE; 다음 Context 설계 검토 |
 
 # 23. Status Matrix
 
-[확실] **Snapshot: 2026-11-01 KST.** R2/R4 결과는 유지하고 S3-1 Fold1·2·3 resume 완료를 반영했다. 아래 날짜가 명시된2026-10-26 문단은 당시 이력이며 현재 상태는 이 표와 마지막 interim review를 따른다.
+[확실] **Snapshot: 2026-11-05 KST.** R2/R4 결과는 유지하고 S3-1 Fold1~4 resume 완료와 final aggregate를 반영했다. 아래 날짜가 있는 snapshot/interim review는 당시 기록이며 현재 상태는 이 표와 마지막 final review를 따른다.
 
 | Work | Status |
 |---|---|
@@ -807,19 +812,21 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | R3 | **OPTIONAL / NOT RUN** |
 | R4 | **DIAGNOSTIC COMPLETED / MIXED / NO NEW TRAINING RECOMMENDED** |
 | R5 | **DEFER / NOT RUN** |
-| Stage3 | **IN PROGRESS — S3-1 IMPLEMENTED / 3 OF 4 FOLDS COMPLETED / INTERIM** |
+| Stage3 | **IN PROGRESS — S3-1 COMPLETED / 4 OF 4 FOLDS COMPLETED** |
 | Context candidates | DOCUMENTED ONLY |
 | Context dedicated implementation | S3-1 COMPLETED |
 | S3-1 Fold1 / checkpoint-resume | **COMPLETED VIA RESUME / VALIDATED** |
 | S3-1 Fold2 | **COMPLETED VIA RESUME / epoch30 official F1 77.49%** |
 | S3-1 Fold3 | **COMPLETED VIA RESUME / epoch30 official F1 77.29%** |
-| S3-1 Fold4 | **NOT RUN** |
-| S3-1 official aggregate | **NOT AVAILABLE** |
+| S3-1 Fold4 | **COMPLETED VIA RESUME / epoch30 official F1 77.43%** |
+| S3-1 official aggregate | **COMPLETED / F1 77.26% ± 0.26%p** |
+| S3-1 result | **NO IMPROVEMENT OVER R2 REFERENCE** |
+| S3-2 | **NOT DESIGNED / NOT RUN** |
 | EAR/MAR/Head Pose/Blink/Yawn/temporal rule | NOT STARTED |
 | Fusion implementation | NOT STARTED |
 | Final ablation matrix | NOT AVAILABLE |
 
-[확실] **NEXT:** S3-1 Fold4 → R2와4-fold mean/std 비교다. **AFTER:** Behavior Detection → Fusion Detection. 이번 문서 작업에서는 학습을 실행하거나 변경하지 않았다.
+[확실] **NEXT:** S3-1 결과를 근거로 다음 Context experiment 설계를 검토한다. S3-2 architecture는 미확정이다. **AFTER:** Behavior Detection → Fusion Detection. 이번 문서 작업에서는 학습을 실행하거나 변경하지 않았다.
 
 [확실] **S3-1 implementation (2026-10-18):** Stage2 completed → Stage3 design → S3-1 Temporal Mean Pooling implemented. 전용 model/config/script와35개 targeted test 통과를 기록한다. R2 default final-hidden은 유지하고 S3만 모든 hidden states의 평균을 사용한다. Parameter 수는 동일하며 output/MLflow는 Stage3 전용으로 분리했다. Full training과 실제 dataset 처리는 NOT RUN이고 성능 결과는 NOT AVAILABLE이다.
 
@@ -838,6 +845,8 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 [확실] 요청의 Fold2 NOT RUN 전제와 달리 local MLflow는2026-10-26 14:10:29 KST 시작한 Fold2를 RUNNING으로 기록하고 별도 환경 JSON이 있다. 조회 시 history는 없었으며 프로세스 생존은 직접 조회하지 않았다. 다른 학습을 실행하거나 변경하지 않고 문서에 차이만 반영했다. Fold3/4는 NOT RUN, aggregate는 NOT AVAILABLE이다.
 
 ## S3-1 interim review — 2/4 folds (2026-10-28)
+
+[확실] 아래는 당시 중간 검토 기록이다. 현재 최종 결과는 마지막 S3-1 final review를 따른다.
 
 [확실] **INTERIM / 2 OF 4 FOLDS COMPLETED.** 실행 흐름은 S3-1 implementation → Fold1 시작 → epoch20 후 중단 → resume21 → Fold1 epoch30 완료 → Fold2 시작 → epoch25 후 중단 → resume26 → Fold2 epoch30 완료 → 두 fold 중간 검토 → 다음 Fold3다. Fold1 첫 resume의 CUDA 실패도 위 이력에 보존한다.
 
@@ -864,12 +873,14 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 | 1 | `outputs/context_model/S3_1_temporal_mean_fold1_official/fold_1/last_checkpoint.pt` | `outputs/context_model/S3_1_temporal_mean_fold1_resume_retry_20261023/fold_1/` | start_epoch=21; epoch21~30 |
 | 2 | `outputs/context_model/S3_1_temporal_mean_fold2_official/fold_2/last_checkpoint.pt` | `outputs/context_model/S3_1_temporal_mean_fold2_resume_retry_20261027/fold_2/` | start_epoch=26; epoch26~30 |
 
-[확실] 두 fold 모두 **COMPLETED VIA RESUME / checkpoint-resume VALIDATED**다. Original history는 각각20/25개, final history는1~30 연속이며 이전 metric을 보존한다. 경계 epoch20/25의 checkpoint save/total timing 차이는 metric 차이와 구분했다. Final model/last checkpoint가 존재하며 무중단 완주 또는 bitwise 동일성은 주장하지 않는다. 상세 raw 수치·source·architecture는 [Stage3 interim results](context_model/stage3_context_improvement_plan.md#s3-1-interim-results--34-folds)에 기록했다.
+[확실] 두 fold 모두 **COMPLETED VIA RESUME / checkpoint-resume VALIDATED**다. Original history는 각각20/25개, final history는1~30 연속이며 이전 metric을 보존한다. 경계 epoch20/25의 checkpoint save/total timing 차이는 metric 차이와 구분했다. Final model/last checkpoint가 존재하며 무중단 완주 또는 bitwise 동일성은 주장하지 않는다. 상세 raw 수치·source·architecture는 [Stage3 final results](context_model/stage3_context_improvement_plan.md#s3-1-final-results--44-folds)에 기록했다.
 
 [확실] 두 final metadata의 parameter count는 R2와 동일한 total132,523,778 / trainable19,174,082 / frozen113,349,696이다. 주요 architecture 변경은 final hidden→20 timestep hidden mean뿐이다. 기존 연구 조건을 유지하며 이번에는 문서 세 개만 갱신했다. **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 IN PROGRESS / Fold3·4 NOT RUN / 4-fold aggregate NOT AVAILABLE / NEXT Fold3**다.
 
 
 ## S3-1 interim review — 3/4 folds (2026-11-01)
+
+[확실] 아래는 당시 중간 검토 기록이다. 현재 최종 결과는 마지막 S3-1 final review를 따른다.
 
 [확실] **INTERIM / 3 OF 4 FOLDS COMPLETED / NOT OFFICIAL AGGREGATE.** 기존 Fold1/2 resume 이력과10월28일 중간 검토를 보존한다. 후속 흐름은 **Fold3 started → interrupted after epoch10 → resumed from epoch11 → Fold3 completed → interim 3-fold review → next Fold4**다. 정확 시작/종료 일시는 이번에 조회하지 않았다.
 
@@ -907,6 +918,94 @@ python -m mlflow server --backend-store-uri sqlite:///mlflow.db --artifacts-dest
 
 [확실] Fold3는 epoch1~10 후 중단했고 사용자 로그의 **start_epoch=11**과 original history10개/final history1~30 연속성을 확인했다. 이전 epoch metric은 원래 history와 일치한다. 10월30일 이전 두 실패 시도는 각각 MLflow tracking URI 변경에 따른 config mismatch와 DataLoader 영상 로딩 중 NumPy 메모리 할당 실패였고 새 완료 epoch/checkpoint가 없다. 10월29일 시도도 환경 JSON만 존재한다. 실패 output은 보존하고 최종170320 output만 사용한다. Tracking URI 변경을 허용한 복원 수정은 기존 대화의 작업 이력이며 이번 문서 작업에서는 source/config/test를 수정하지 않았다.
 
-[확실] 세 fold 모두 **COMPLETED VIA RESUME**다. 각 final model/last checkpoint의 존재를 확인했고 이번 작업에서는 checkpoint를 역직렬화하지 않았다. 무중단 완주 또는 bitwise 동일성을 주장하지 않는다. 세 training metadata의 parameter 수는 동일한 total132,523,778 / trainable19,174,082 / frozen113,349,696이다. R2 final hidden 대신 `[B,20,512].mean(dim=1) → [B,512]`을 같은 classifier에 입력하는 temporal readout만 주요 architecture 변경이다. Raw source와 R2 경로는 [Stage3 interim results](context_model/stage3_context_improvement_plan.md#s3-1-interim-results--34-folds)에 기록했다.
+[확실] 세 fold 모두 **COMPLETED VIA RESUME**다. 각 final model/last checkpoint의 존재를 확인했고 이번 작업에서는 checkpoint를 역직렬화하지 않았다. 무중단 완주 또는 bitwise 동일성을 주장하지 않는다. 세 training metadata의 parameter 수는 동일한 total132,523,778 / trainable19,174,082 / frozen113,349,696이다. R2 final hidden 대신 `[B,20,512].mean(dim=1) → [B,512]`을 같은 classifier에 입력하는 temporal readout만 주요 architecture 변경이다. Raw source와 R2 경로는 [Stage3 final results](context_model/stage3_context_improvement_plan.md#s3-1-final-results--44-folds)에 기록했다.
 
 [확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 IN PROGRESS / Fold1~3 COMPLETED VIA RESUME / Fold4 NOT RUN / 4-fold aggregate NOT AVAILABLE / NEXT Fold4**다. 이번 작업은 문서 세 개만 갱신했으며 모델·trainer·config·기존 output은 수정/삭제/이동하지 않았고 학습과 Fold4를 실행하지 않았다.
+
+
+## S3-1 final review — 4/4 folds (2026-11-05)
+
+[확실] **S3-1 COMPLETED / OFFICIAL 4-FOLD AGGREGATE COMPLETED.** 기존 Fold1~3 resume과 interim review 이력은 유지한다. 후속 흐름은 **Fold4 started → epoch14 interruption → checkpoint resume from epoch15 → epoch30 completed → S3-1 4-fold completed → aggregate calculated → R2 comparison → no improvement over reference → next Context experiment design pending**다.
+
+### Official epoch30 and raw sources
+
+| Fold / official epoch | Accuracy (%) | Precision (%) | Recall (%) | F1 (%) | Train loss | Test loss |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 / 30 | 78.61 | 78.30 | 75.41 | 76.83 | 0.07830131527791069 | 0.7655578458067999 |
+| 2 / 30 | 79.96 | 82.11 | 73.36 | 77.49 | 0.03797693561966205 | 0.7798838005302499 |
+| 3 / 30 | 79.96 | 82.71 | 72.54 | 77.29 | 0.06812437050212235 | 0.729267328891451 |
+| 4 / 30 | 77.56 | 73.43 | 81.89 | 77.43 | 0.07417722536500976 | 0.7816027627980455 |
+
+[확실] 네 fold의 metrics.json과 history epoch30이 사용자 제공값과 일치하며 history는 각각1~30 연속이다. Raw classification metric은 다음과 같다.
+
+- Fold1 Accuracy/Precision/Recall/F1: 0.7861271676300579 / 0.7829787234042553 / 0.7540983606557377 / 0.7682672233820459; confusion matrix `[[224,51],[60,184]]`.
+- Fold2 Accuracy/Precision/Recall/F1: 0.7996146435452793 / 0.8211009174311926 / 0.7336065573770492 / 0.774891774891775; confusion matrix `[[236,39],[65,179]]`.
+- Fold3 Accuracy/Precision/Recall/F1: 0.7996146435452793 / 0.8271028037383178 / 0.7254098360655737 / 0.7729257641921398; confusion matrix `[[238,37],[67,177]]`.
+- Fold4 Accuracy/Precision/Recall/F1: 0.7756286266924565 / 0.7343173431734318 / 0.8189300411522634 / 0.7743190661478601; confusion matrix `[[202,72],[44,199]]`.
+
+### Official aggregate and paired comparison
+
+[확실] Raw float에서 동일 가중치4-fold mean과 **population std(ddof=0)**를 재계산했다. Mean 단위는%, std/delta는%p다. R2도 기존 네 최종 output에서 재계산했고 reference와 일치한다. Rounded metric이나 pooled confusion matrix를 사용하지 않았다.
+
+| Metric | S3-1 mean ± population std | R2 mean ± population std | S3-1−R2 mean (%p) |
+|---|---:|---:|---:|
+| Accuracy | 79.02% ± 1.01%p | 81.58% ± 2.19%p | −2.56 |
+| Precision | 79.14% ± 3.70%p | 81.04% ± 2.89%p | −1.90 |
+| Recall | 75.80% ± 3.67%p | 79.49% ± 2.06%p | −3.69 |
+| F1 | 77.26% ± 0.26%p | 80.24% ± 2.22%p | −2.98 |
+
+| Fold | R2 F1 (%) | S3-1 F1 (%) | ΔAccuracy (%p) | ΔPrecision (%p) | ΔRecall (%p) | ΔF1 (%p) |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 | 76.89 | 76.83 | +0.39 | +1.56 | −1.64 | −0.06 |
+| 2 | 79.84 | 77.49 | −1.16 | +1.94 | −6.15 | −2.35 |
+| 3 | 81.36 | 77.29 | −3.08 | −1.50 | −6.15 | −4.06 |
+| 4 | 82.89 | 77.43 | −6.38 | −9.63 | −0.82 | −5.45 |
+
+[확실] Raw mean F1 delta는 **−2.982288442144%p**다. Fold별 raw F1 delta는−0.064893 / −2.346213 / −4.063356 / −5.454691%p이고 표시값은−0.06 / −2.35 / −4.06 / −5.45%p다. Fold3/4 rounded final F1끼리 뺀−4.07/−5.46%p와 구분한다. **4/4 fold에서 final F1 improvement가 관찰되지 않았다.** S3-1 F1 std0.26%p는 R2 2.22%p보다 작지만 mean도 낮았다. 이번4-fold의 편차 관찰을 일반적인 모델 안정성으로 확대하지 않는다.
+
+[확실] Aggregate Precision과 Recall은 모두 감소했다. Precision은 Fold1/2 증가·Fold3/4 감소다. Recall은 네 fold 모두 감소했지만 Fold4의 S3-1 Recall81.89%는 자체 Fold1~3보다 높았다(R2 Fold4 82.72%). Fold4 Precision은73.43%로 R2 83.06%보다 낮았다. Fold별 tradeoff가 달라 이전 일부 interim의 Precision 증가/Recall 감소를 최종 일반화하지 않는다.
+
+### Loss and post-hoc diagnostics
+
+| Fold | Epoch1~10 mean train loss | Epoch21~30 mean train loss | Epoch1~10 mean test loss | Epoch21~30 mean test loss |
+|---|---:|---:|---:|---:|
+| 1 | 0.377156 | 0.103914 | 0.500581 | 0.757418 |
+| 2 | 0.396543 | 0.083278 | 0.461244 | 0.712851 |
+| 3 | 0.386751 | 0.097004 | 0.468320 | 0.651514 |
+| 4 | 0.393383 | 0.101703 | 0.424109 | 0.637707 |
+
+[확실] 네 fold 모두 후반 평균 train loss는 낮고 test loss는 높았으며 단조 변화라고 주장하지 않는다. Fold4 test loss epoch5 0.38940573891541946 → epoch30 0.7816027627980455다. 후반 test loss 증가와 best−final gap은 진단 대상으로 남기고 과적합 확정이나 학습 길이 변경으로 해석하지 않는다.
+
+**POST-HOC DIAGNOSTIC ONLY — official model selection에 사용하지 않음.**
+
+| Fold | Best epoch | Best test F1 (%) | Official final F1 (%) | Best−final (%p) |
+|---|---:|---:|---:|---:|
+| 1 | 16 | 79.30 | 76.83 | +2.47 |
+| 2 | 9 | 79.84 | 77.49 | +2.35 |
+| 3 | 19 | 80.99 | 77.29 | +3.70 |
+| 4 | 8 | 84.15 | 77.43 | +6.71 |
+
+[확실] 네 history 전체에서 best epoch/F1을 재검증했다. Fold4 true best는 epoch8, raw F1 0.8414634146341464다. Official은 모두 epoch30 final을 유지하며 best epoch로 aggregate를 대체하지 않는다.
+
+### Fold4 resume completion and preserved provenance
+
+| Fold | Original checkpoint (saved epoch) | Final resume output | Resume range / status |
+|---|---|---|---|
+| 1 | `outputs/context_model/S3_1_temporal_mean_fold1_official/fold_1/last_checkpoint.pt` (epoch20) | `outputs/context_model/S3_1_temporal_mean_fold1_resume_retry_20261023/fold_1/` | start_epoch=21; epoch21~30; COMPLETED VIA RESUME |
+| 2 | `outputs/context_model/S3_1_temporal_mean_fold2_official/fold_2/last_checkpoint.pt` (epoch25) | `outputs/context_model/S3_1_temporal_mean_fold2_resume_retry_20261027/fold_2/` | start_epoch=26; epoch26~30; COMPLETED VIA RESUME |
+| 3 | `outputs/context_model/S3_1_temporal_mean_fold3_official/fold_3/last_checkpoint.pt` (epoch10) | `outputs/context_model/S3_1_temporal_mean_fold3_resume_20261030_170320/fold_3/` | start_epoch=11; epoch11~30; COMPLETED VIA RESUME |
+| 4 | `outputs/context_model/S3_1_temporal_mean_fold4_official_20261101_165131/fold_4/last_checkpoint.pt` (epoch14) | `outputs/context_model/S3_1_temporal_mean_fold4_resume_20261103_060647/fold_4/` | start_epoch=15; epoch15~30; COMPLETED VIA RESUME |
+
+[확실] Fold4 original은11월1일 시작해 epoch14까지 저장했고11월2일 사용자 요청으로 학습/worker만 종료하며 MLflow를 유지했다. Epoch14 checkpoint에서 **start_epoch=15**로 재개해15~30을 완료했다. Original14개 history와 final1~30의 이전 metric이 일치하고 final model/last checkpoint가 존재한다. 네 fold 모두 COMPLETED VIA RESUME이며 무중단 완주 또는 bitwise 동일성을 주장하지 않는다. Checkpoint 역직렬화는 이번 작업에서 하지 않았다.
+
+[확실] 읽기 전용 MLflow DB에서 Fold4 resume child `a529a3fc9814485691e841c3e49e2ed9`의 start_epoch=15/resume_from과 final metric(local 일치)을 확인했다. Child는 **2026-11-03 06:07:11 KST~2026-11-04 01:03:31 KST**, child와 parent `e4638bb2e8da4b139221e1944eaeb133`는 FINISHED다. 중단된 original run의 RUNNING 잔존은 최종 완료와 구분하고 DB를 수정하지 않았다.
+
+### Research decision and next question
+
+[확실] **S3-1 COMPLETED — NO IMPROVEMENT OVER R2 REFERENCE.** 동일 parameter 수(total132,523,778/trainable19,174,082/frozen113,349,696)에서 final hidden을 `[B,20,512].mean(dim=1) → [B,512] → same classifier`로 변경한 이번 architecture/dataset/training 조건은 mean F1−2.98%p,4/4 fold의 final F1 감소였다. R2 reference를 유지한다. Mean pooling이 일반적으로 나쁜 방법이라는 결론은 아니다.
+
+[추측] **POSSIBLE INTERPRETATION / HYPOTHESIS:** 모든 timestep에 같은 가중치를 주면서 특정 시점의 중요한 temporal information이 희석됐을 가능성이 있다. 직접 검증한 원인이나 증명으로 쓰지 않는다.
+
+[확실] 연구 흐름은 **R2 final hidden F1 80.24% ± 2.22%p → 모든 timestep 사용 질문 → equal mean pooling → S3-1 F1 77.26% ± 0.26%p → 개선 없음 → 중요한 timestep을 선택·가중할 필요가 있는가?**다. 마지막 질문을 다음 Context improvement 설계 검토로 남긴다. S3-2 architecture를 확정하거나 구현·학습하지 않았다. Single seed/test 재사용/overlapping training folds/subject-wise 정보 미확인/CUDA warn_only/resume의 한계를 유지하며 독립적 확증 평가나 통계적 유의성을 주장하지 않는다.
+
+[확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED / Fold1~4 COMPLETED VIA RESUME / official aggregate COMPLETED / S3-1 result NO IMPROVEMENT OVER R2 REFERENCE / S3-2 NOT DESIGNED / NOT RUN.** 상세 raw aggregate와 R2 source는 [Stage3 최종 결과](context_model/stage3_context_improvement_plan.md#s3-1-final-results--44-folds)에 있다. 집계는 문서에만 기록하고 기존 output을 수정하거나 새 cv_summary.json을 생성하지 않았다. 이번 작업은 지정된 문서 세 개만 수정했으며 모델·trainer·config·학습·S3-2·기존 output을 변경/실행하지 않았다.
