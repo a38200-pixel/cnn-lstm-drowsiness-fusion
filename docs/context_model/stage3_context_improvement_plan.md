@@ -1,6 +1,6 @@
 # Stage 3 — Proposed Context Model Improvement
 
-[확실] 갱신일: 2026-11-05 KST. **Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED / 4 OF 4 FOLDS COMPLETED**. Fold1~4는 모두 COMPLETED VIA RESUME, official 4-fold aggregate는 COMPLETED다. S3-1 결과는 **NO IMPROVEMENT OVER R2 REFERENCE**다. 15절은 날짜가 있는 과거 Fold1 snapshot이며 최신 결과는 S3-1 Final Results를 따른다. **S3-2 PLANNING**, Architecture design/implementation은 NOT STARTED, Training은 NOT RUN이다. [S3-2 실험 계획](s3_2_attention_plan.md)과 [진행 기록](s3_2_attention_progress.md)을 생성했으며 NEXT는 S3-2 Architecture Design이다.
+[확실] 갱신일: 2026-11-05 KST. **Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED / 4 OF 4 FOLDS COMPLETED**. Fold1~4는 모두 COMPLETED VIA RESUME, official 4-fold aggregate는 COMPLETED다. S3-1 결과는 **NO IMPROVEMENT OVER R2 REFERENCE**다. 15절은 날짜가 있는 과거 Fold1 snapshot이며 최신 결과는 S3-1 Final Results를 따른다. **S3-2 ARCHITECTURE DESIGN COMPLETED**, Implementation은 NOT STARTED, Training은 NOT RUN이다. [S3-2 실험 계획](s3_2_attention_plan.md)과 [진행 기록](s3_2_attention_progress.md)을 생성했으며 NEXT는 S3-2 Implementation이다.
 
 ## 1. Motivation
 
@@ -158,9 +158,9 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 |---|---|---|---|
 | **S3-0** | Existing R2 reference | **0** | Output/조건/상태 provenance 확인; 새 실행으로 부르지 않음 |
 | **S3-1** | Mean hidden-state pooling only — COMPLETED | **4/4 COMPLETED VIA RESUME; aggregate COMPLETED** | NO IMPROVEMENT OVER R2 REFERENCE |
-| **S3-2** | Learnable Temporal Attention — 문서 체계 마련 | **PLANNING / Training NOT RUN** | Architecture design NOT STARTED; 상세 구조 미확정; 자동 실행 금지 |
+| **S3-2** | Direct Scalar Temporal Attention — 선택 설계 완료 | **ARCHITECTURE DESIGN COMPLETED / Training NOT RUN** | Implementation NOT STARTED; 자동 실행 금지 |
 
-[확실] **NEXT: S3-2 Architecture Design.** 계획과 실제 수행 기록은 [실험 계획](s3_2_attention_plan.md) / [진행 기록](s3_2_attention_progress.md)으로 분리한다. 이번에는 문서 체계만 마련했으며 학습을 실행하거나 기존 프로세스를 변경하지 않았다. R3/R5 재개는 별도 결정이다.
+[확실] **NEXT: S3-2 Implementation — NOT STARTED.** 계획과 실제 수행 기록은 [실험 계획](s3_2_attention_plan.md) / [진행 기록](s3_2_attention_progress.md)으로 분리한다. 이번에는 선택 설계를 문서화했으며 구현·학습을 실행하거나 기존 프로세스를 변경하지 않았다. R3/R5 재개는 별도 결정이다.
 
 ## 14. Status
 
@@ -181,7 +181,7 @@ S3-1:    [B,20,4096] → same LSTM512 → [h1,...,h20]
 | S3-1 Fold4 | **COMPLETED VIA RESUME / epoch30 official F1 77.43%** |
 | S3-1 training / official aggregate | **COMPLETED / COMPLETED** |
 | S3-1 result | **NO IMPROVEMENT OVER R2 REFERENCE** |
-| S3-2 | **PLANNING / Architecture design NOT STARTED / Training NOT RUN** |
+| S3-2 | **ARCHITECTURE DESIGN COMPLETED / Implementation NOT STARTED / Training NOT RUN** |
 | Behavior / Fusion | **NOT STARTED / NOT STARTED** |
 
 [확실] Implementation snapshot: 전용 `stage3_temporal_mean.py`, `stage3_s3_1_temporal_mean.yaml`, `train_stage3_s3_1.py`를 생성했다. LSTM 옵션과 공용 checkpoint/environment의 condition ID만 확장했으며 기존 R2 semantics는 회귀 테스트로 확인했다. Attention/BiLSTM/Bottleneck/Behavior/Fusion은 구현하지 않았다.
@@ -380,6 +380,6 @@ R2 source는 `outputs/paper_reconstruction/refinement/` 기준이다.
 
 ### Current status and next research question
 
-[확실] 연구 흐름은 **R2 final hidden F1 80.24% ± 2.22%p → 모든 timestep이 더 나은가? → equal mean pooling → S3-1 F1 77.26% ± 0.26%p → 개선 없음 → 중요한 timestep을 선택·가중할 필요가 있는가?**다. 마지막 질문은 다음 Context improvement 설계 검토 대상이다. Attention 등 특정 architecture를 S3-2로 확정하지 않는다.
+[확실] 연구 흐름은 **R2 final hidden F1 80.24% ± 2.22%p → 모든 timestep이 더 나은가? → equal mean pooling → S3-1 F1 77.26% ± 0.26%p → 개선 없음 → 중요한 timestep을 선택·가중할 필요가 있는가?**다. 마지막 질문에 대해 S3-2 Direct Scalar Temporal Attention 설계를 선택했다. 상세 근거는 S3-2 계획/진행 문서에 있으며 구현·학습은 미실행이다.
 
-[확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED / 4-fold aggregate COMPLETED / S3-1 result NO IMPROVEMENT OVER R2 REFERENCE / S3-2 PLANNING.** S3-2는 [실험 계획](s3_2_attention_plan.md)과 [진행 기록](s3_2_attention_progress.md)만 생성했으며 상세 Architecture design/implementation은 NOT STARTED, Training은 NOT RUN이다. **NEXT: S3-2 Architecture Design.** 모델·trainer·config·기존 output을 변경하거나 새 학습·S3-2 구현/실행을 하지 않았다.
+[확실] **Stage2 COMPLETED / Stage3 IN PROGRESS / S3-0 R2 REFERENCE / S3-1 COMPLETED / 4-fold aggregate COMPLETED / S3-1 result NO IMPROVEMENT OVER R2 REFERENCE / S3-2 ARCHITECTURE DESIGN COMPLETED.** S3-2의 선택 설계는 [실험 계획](s3_2_attention_plan.md)과 [진행 기록](s3_2_attention_progress.md)에 기록했으며 Implementation은 NOT STARTED, Training은 NOT RUN이다. **NEXT: S3-2 Implementation — NOT STARTED.** 모델·trainer·config·기존 output을 변경하거나 새 학습·S3-2 구현/실행을 하지 않았다.

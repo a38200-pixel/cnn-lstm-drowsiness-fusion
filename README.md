@@ -46,7 +46,7 @@ flowchart TD
 | S3-1 Fold1 / Fold2 | COMPLETED VIA RESUME / COMPLETED VIA RESUME |
 | S3-1 Fold3 / Fold4 | COMPLETED VIA RESUME / COMPLETED VIA RESUME |
 | S3-1 official 4-fold aggregate / result | COMPLETED / NO IMPROVEMENT OVER R2 REFERENCE |
-| S3-2 | PLANNING · Architecture design NOT STARTED · Training NOT RUN |
+| S3-2 | ARCHITECTURE DESIGN COMPLETED · Implementation NOT STARTED · Training NOT RUN |
 | Behavior Detection — EAR / MAR / Head Pose | PLANNED / NOT STARTED |
 | Context + Behavior Fusion | PLANNED / NOT STARTED |
 
@@ -97,7 +97,7 @@ Held-out test의 최고 epoch는 **POST-HOC DIAGNOSTIC ONLY**로 분리하고 of
 
 현재4-fold 관찰에서 S3-1의 fold 간 F1 편차는 작았지만 평균 F1도 낮았습니다. 일반적인 모델 안정성으로 확대하지 않습니다. Aggregate Precision·Recall은 모두 감소했고 fold별 tradeoff는 달랐습니다. Raw metrics·집계·paired delta·post-hoc diagnostic·resume 이력은 [Stage3 최종 결과](docs/context_model/stage3_context_improvement_plan.md#s3-1-final-results--44-folds)에 있습니다.
 
-연구 흐름은 **R2 final hidden → 모든 timestep 사용이 더 나은가? → 동일 가중치 mean pooling → 평균 F1 개선 없음 → 중요한 timestep을 선택·가중할 필요가 있는가?**입니다. S3-2 Learnable Temporal Attention은 **PLANNING**이며 상세 architecture 설계·구현·학습은 시작하지 않았습니다. [실험 계획](docs/context_model/s3_2_attention_plan.md)과 [진행 기록](docs/context_model/s3_2_attention_progress.md)을 마련했습니다.
+연구 흐름은 **R2 final hidden → 모든 timestep 사용이 더 나은가? → 동일 가중치 mean pooling → 평균 F1 개선 없음 → 중요한 timestep을 선택·가중할 필요가 있는가?**입니다. S3-2 Learnable Temporal Attention은 **ARCHITECTURE DESIGN COMPLETED**이며 구현·학습은 시작하지 않았습니다. [실험 계획](docs/context_model/s3_2_attention_plan.md)과 [진행 기록](docs/context_model/s3_2_attention_progress.md)을 마련했습니다.
 
 ## Problem Solving & Engineering
 
@@ -150,7 +150,7 @@ README.md                  # 프로젝트 소개와 문서 허브
 
 ## Next Steps
 
-1. S3-2 Architecture Design에서 시점별 중요도를 학습하는 방향과 비교 조건을 검토합니다. 상세 architecture는 미확정이며 구현·학습을 시작하지 않았습니다.
+1. 다음 단계는 S3-2 Implementation입니다. 선택한 Direct Scalar Temporal Attention의 설계는 완료했으며 구현·학습은 아직 시작하지 않았습니다.
 2. 추가 Context 실험 여부와 비교 조건·비용을 사전에 결정합니다. Attention/BiLSTM/Bottleneck은 현재 미구현 후보입니다.
 3. Behavior branch와 Context + Behavior Fusion을 별도로 설계합니다. Event 정의·평가·timestamp 정렬·결합 규칙은 향후 검증 대상입니다.
 
