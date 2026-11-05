@@ -136,6 +136,9 @@ README.md                  # 프로젝트 소개와 문서 허브
 
 상세 명세와 실행 정보는 다음 문서에서 확인할 수 있습니다.
 
+- [Project Workflow](docs/PROJECT_WORKFLOW.md) — 공통 작업·검증·기록 규칙.
+- [Execution Plan](docs/EXECUTION_PLAN.md) — 현재 실행 단계와 다음 작업.
+- [Progress Log](docs/PROGRESS.md) — 중앙 진행 요약과 상세 이력 링크.
 - [Baseline specification](docs/paper_reconstruction/baseline_spec.md) — 논문 근거, 구조 추론, 구현 선택과 known unknowns.
 - [Data preparation](docs/paper_reconstruction/data_preparation.md) — metadata, split, sampling과 전처리 정책.
 - [Model pipeline](docs/paper_reconstruction/model_pipeline.md) — frame→VGG→LSTM 구조와 구현 대응.
